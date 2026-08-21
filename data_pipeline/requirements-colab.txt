@@ -1,0 +1,5 @@
+# Colab embedding/token-length dependencies
+numpy>=1.23
+torch>=2.1
+transformers>=4.41
+sentence-transformers>=2.7

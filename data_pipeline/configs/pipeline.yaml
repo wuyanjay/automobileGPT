@@ -1,0 +1,56 @@
+{
+  "seed": 42,
+  "paths": {
+    "raw": "data/raw",
+    "work": "data/work",
+    "final": "data/final/v1"
+  },
+  "sources": {
+    "amck": "data/raw/amck/amck.json",
+    "d2": "data/raw/mechanics_exchange/mechanics_english_sft.jsonl",
+    "d3": "data/raw/automotive_fault_dataset/spo_0.json",
+    "professional_sft": "data/raw/professional_sft/automotive_fault_sft.jsonl",
+    "d4_dir": "data/raw/新能源汽车维修故障案例"
+  },
+  "splits": {
+    "d1_train": 90,
+    "d1_validation": 5,
+    "d2_train": 90,
+    "d2_validation": 5,
+    "d4_train": 80,
+    "d4_validation": 10
+  },
+  "filters": {
+    "min_evidence_chars": 80,
+    "max_evidence_chars": 6000,
+    "max_base_answer_chars": 5000,
+    "include_unsafe_evidence": false,
+    "include_context_dependent_d2": false
+  },
+  "embedding": {
+    "model": "BAAI/bge-m3",
+    "batch_size": 16,
+    "raw_top_k": 10,
+    "final_top_k": 3,
+    "min_score": null,
+    "pilot_query_limit": 1000
+  },
+  "generation": {
+    "provider": "api",
+    "model_env": "LLM_MODEL",
+    "base_url_env": "LLM_BASE_URL",
+    "api_key_env": "LLM_API_KEY",
+    "temperature": 0.1,
+    "save_every": 100,
+    "attempts": 3
+  },
+  "export": {
+    "include_legacy_sft": true,
+    "legacy_sft_limit": 100,
+    "max_conversation_chars": 8000,
+    "max_tokens": 4096,
+    "review_samples_per_route": 30,
+    "validation_limit": 200,
+    "test_limit": 200
+  }
+}

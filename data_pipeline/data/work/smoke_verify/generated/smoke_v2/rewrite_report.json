@@ -1,0 +1,30 @@
+{
+  "provider": "mock",
+  "model": null,
+  "splits": {
+    "train": {
+      "output": 10,
+      "new": 0,
+      "rejected": 0,
+      "routes": {
+        "no_evidence": 10
+      }
+    },
+    "validation": {
+      "output": 10,
+      "new": 0,
+      "rejected": 0,
+      "routes": {
+        "no_evidence": 10
+      }
+    },
+    "test": {
+      "output": 4,
+      "new": 0,
+      "rejected": 0,
+      "routes": {
+        "no_evidence": 4
+      }
+    }
+  }
+}

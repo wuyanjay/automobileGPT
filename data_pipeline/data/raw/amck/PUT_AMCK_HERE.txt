@@ -1,0 +1,6 @@
+把 219810 条 AMCK 数据放在本目录。
+
+推荐文件名：amck.json 或 amck.jsonl
+也支持：.json、.jsonl、.ndjson、.json.gz、.jsonl.gz
+
+每条数据必须包含：instruction、input、output。

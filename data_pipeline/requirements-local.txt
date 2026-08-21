@@ -1,0 +1,2 @@
+# Windows local preprocessing and smoke retrieval
+numpy>=1.15

@@ -1,0 +1,7 @@
+把已经由 zhengr/Automotive_Industry_Fault_Data_Set 构造出的 4302 条 SFT 数据放在本目录。
+
+推荐文件名：automotive_fault_sft.jsonl
+也支持：.json、.jsonl、.ndjson、.json.gz、.jsonl.gz
+
+每条数据示例：
+{"conversations":[{"from":"human","value":"P0420故障码的常见原因有哪些？"},{"from":"gpt","value":"P0420表示催化转换器效率低于阈值……"}]}
