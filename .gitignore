@@ -1,7 +1,7 @@
 MedicalGPT/
 
 # Generated data pipeline artifacts
-/data_pipeline/data/work/
+# /data_pipeline/data/work/
 /data_pipeline/data/final/
 
 # Python

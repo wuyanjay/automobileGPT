@@ -1,0 +1,28 @@
+{
+  "provider": "mock",
+  "model": null,
+  "splits": {
+    "train": {
+      "existing": 6,
+      "candidates": 6,
+      "output": 11,
+      "rejected": 0,
+      "used_by_rewrite": 0
+    },
+    "validation": {
+      "existing": 6,
+      "candidates": 6,
+      "output": 8,
+      "rejected": 0,
+      "used_by_rewrite": 0
+    },
+    "test": {
+      "existing": 6,
+      "candidates": 6,
+      "output": 9,
+      "rejected": 0,
+      "used_by_rewrite": 0
+    }
+  },
+  "seed": 42
+}

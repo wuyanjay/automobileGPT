@@ -1,0 +1,115 @@
+{
+  "d1": {
+    "raw": 43962,
+    "kept": 42016,
+    "rejected": 1946
+  },
+  "datasets": {
+    "d1_amck": {
+      "records": 42016,
+      "flags": {
+        "mixed_repair_price": 1737,
+        "mixed_repair_purchase": 6
+      },
+      "split_counts": {
+        "train": 37830,
+        "validation": 2106,
+        "test": 2080
+      }
+    },
+    "d2_mechanics": {
+      "records": 12827,
+      "flags": {
+        "off_topic": 10,
+        "has_comment_reference": 364,
+        "risk_brake": 1122,
+        "has_image_reference": 1012,
+        "has_external_link": 510,
+        "risk_high_voltage": 29,
+        "risk_lifting": 59,
+        "has_other_answer_reference": 27,
+        "needs_image": 104,
+        "risk_airbag": 57,
+        "has_bypass_term": 62,
+        "needs_external_link": 23,
+        "risk_bypass": 7,
+        "risk_fuel": 9,
+        "needs_comment": 1
+      },
+      "split_counts": {
+        "train": 11551,
+        "test": 642,
+        "validation": 634
+      }
+    },
+    "d3_faults": {
+      "records": 1441,
+      "flags": {
+        "no_diagnosis_process": 563,
+        "off_topic": 97,
+        "uncertain_domain": 343
+      },
+      "split_counts": {
+        "train": 1441
+      }
+    },
+    "professional_sft": {
+      "records": 4302,
+      "flags": {
+        "off_topic": 321
+      },
+      "split_counts": {
+        "train": 4302
+      }
+    },
+    "d4_documents": {
+      "records": 83,
+      "flags": {
+        "risk_high_voltage": 48,
+        "technical_article": 6,
+        "risk_brake": 18,
+        "has_bypass_term": 3,
+        "risk_lifting": 6,
+        "risk_airbag": 3,
+        "maintenance_qa": 1
+      },
+      "split_counts": {
+        "train": 62,
+        "validation": 7,
+        "test": 14
+      }
+    }
+  },
+  "rejected_counts": {
+    "d1_amck": 1946,
+    "d2_mechanics": 143,
+    "d3_faults": 1003,
+    "professional_sft": 321,
+    "d4_documents": 7
+  },
+  "classification_counts": {
+    "d1_intent": {
+      "other": 21711,
+      "repair_only": 18920,
+      "mixed_repair_price": 1739,
+      "mixed_repair_purchase": 6,
+      "purchase_only": 48,
+      "price_only": 1538
+    },
+    "d2_domain": {
+      "non_automotive": 10,
+      "automotive": 12817
+    },
+    "d3_domain": {
+      "automotive": 1001,
+      "non_automotive": 97,
+      "uncertain": 343
+    },
+    "d4_document_type": {
+      "case_evidence": 66,
+      "technical_pt": 6,
+      "procedure_evidence": 10,
+      "maintenance_qa": 1
+    }
+  }
+}

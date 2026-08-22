@@ -1,0 +1,32 @@
+{
+  "backend": "hash",
+  "model": "BAAI/bge-m3",
+  "splits": {
+    "train": {
+      "queries": 10,
+      "evidence": 173,
+      "queries_with_candidates": 8,
+      "mean_candidate_count": 1.8,
+      "query_embeddings_cached": false,
+      "evidence_embeddings_cached": false
+    },
+    "validation": {
+      "queries": 10,
+      "evidence": 10,
+      "queries_with_candidates": 10,
+      "mean_candidate_count": 2.5,
+      "query_embeddings_cached": false,
+      "evidence_embeddings_cached": false
+    },
+    "test": {
+      "queries": 4,
+      "evidence": 16,
+      "queries_with_candidates": 4,
+      "mean_candidate_count": 2.25,
+      "query_embeddings_cached": false,
+      "evidence_embeddings_cached": false
+    }
+  },
+  "review_records": 24,
+  "seed": 42
+}

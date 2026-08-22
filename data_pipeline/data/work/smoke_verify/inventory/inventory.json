@@ -1,0 +1,663 @@
+{
+  "raw_root": "data/raw",
+  "file_count": 90,
+  "extension_counts": {
+    ".json": 2,
+    ".txt": 2,
+    ".jsonl": 2,
+    ".docx": 83,
+    ".doc": 1
+  },
+  "files": [
+    {
+      "path": "data/raw/amck/amck.json",
+      "bytes": 92165850,
+      "extension": ".json",
+      "sha256": "fca169f5e998cc022f0d527e7b8468a68038748e1561a54ab724eb41c9816e76",
+      "temporary": false,
+      "records": 43962,
+      "parse_errors": 0,
+      "format": "json_array"
+    },
+    {
+      "path": "data/raw/amck/PUT_AMCK_HERE.txt",
+      "bytes": 209,
+      "extension": ".txt",
+      "sha256": "f886b0916d63fcab2e1d44cc16deab2c0fa7c8e987798508f67903df5bf9ed35",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/automotive_fault_dataset/spo_0.json",
+      "bytes": 1333167,
+      "extension": ".json",
+      "sha256": "28d34085de065c7a51a309b1436e0dbb8406ac0c88c1260a8e32b1bdb58f6762",
+      "temporary": false,
+      "records": 1441,
+      "parse_errors": 0,
+      "format": "jsonl_with_json_extension"
+    },
+    {
+      "path": "data/raw/mechanics_exchange/mechanics_english_sft.jsonl",
+      "bytes": 16249497,
+      "extension": ".jsonl",
+      "sha256": "0afc30e516bf21c72dce6babd9b86e00b83f453b131a92e7771b4c7729071860",
+      "temporary": false,
+      "records": 12827,
+      "parse_errors": 0,
+      "format": "jsonl"
+    },
+    {
+      "path": "data/raw/professional_sft/automotive_fault_sft.jsonl",
+      "bytes": 2805093,
+      "extension": ".jsonl",
+      "sha256": "e8d3516a6dd411dae9c97c967ce781feaadde3b7d17d01d69921b5de08ba03b5",
+      "temporary": false,
+      "records": 4302,
+      "parse_errors": 0,
+      "format": "jsonl"
+    },
+    {
+      "path": "data/raw/professional_sft/PUT_PROFESSIONAL_SFT_HERE.txt",
+      "bytes": 400,
+      "extension": ".txt",
+      "sha256": "8ae4b07385368ffa41f8396f0b5232ad9f53671da5fd20b0afa1a6f9d34b479b",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/2017款比亚迪E5纯电动车无法充电.docx",
+      "bytes": 14541,
+      "extension": ".docx",
+      "sha256": "0192a04d23e4489d90a6df1be76122f69799a8a932d7596d6e88778247573512",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/2017款比亚迪唐无电动行驶模式.docx",
+      "bytes": 648847,
+      "extension": ".docx",
+      "sha256": "3066c709b149cb0859be2050023f2dbf0d557427d5be7ccb3294dc60e689e224",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/BMWi3电池系统及冷却方案解析.docx",
+      "bytes": 1352027,
+      "extension": ".docx",
+      "sha256": "11dae9e6a9b158bb82b3b4b62bbd41c1743115f10988972adade816602e25e45",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/~$E150EV电动汽车驱动电动机故障诊断.docx",
+      "bytes": 162,
+      "extension": ".docx",
+      "sha256": "76aa3db7256fe40b9c22e8a9a569ed13cb5d004494559d2d0b0968b2e87e4cac",
+      "temporary": true
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/东风纯电动微型客车故障解析及排除.docx",
+      "bytes": 17880,
+      "extension": ".docx",
+      "sha256": "92585ce458d549b05ef662e41744338ffcab3a47bfd15dc515b5d09f6d1940d0",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/中通混合动力客车发动机机油严重缺失.docx",
+      "bytes": 14698,
+      "extension": ".docx",
+      "sha256": "218fc502995cf840786ff261e0edd82a2c63f6d2af8af3888d74e63a2ef52fe7",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田凯美瑞HV2混合动力车无法行驶.docx",
+      "bytes": 13904,
+      "extension": ".docx",
+      "sha256": "8ab1cde911e3f6264934d0a5a88f01a3a90729f9cc7f9edb69137b12aa21ac3c",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田凯美瑞HV混合动力系统故障检修.docx",
+      "bytes": 14712,
+      "extension": ".docx",
+      "sha256": "47bdc3cd0e1db4eb7359889e90b538ef03db382fcc90cc18aad870075aa69e0f",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田凯美瑞混合动力系统故障灯亮.docx",
+      "bytes": 13061,
+      "extension": ".docx",
+      "sha256": "2b923444873ced4ec6b2046de7df7fe897878aab1e7944112f7f4ce407ae6bee",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田凯美瑞混合动力轿车发动机故障灯点亮.docx",
+      "bytes": 14303,
+      "extension": ".docx",
+      "sha256": "d4e70ab64da5e2967eb593fcfe6d3601a1c7c51d990262c2a3e22c8864e91115",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田凯美瑞混合动力轿车行驶中会突然失去动力.docx",
+      "bytes": 13210,
+      "extension": ".docx",
+      "sha256": "1094a648a1af3b4c4d9e4cf2729cef7c98803cc9c8412105273de5ad42b52b56",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/丰田普锐斯混合动力汽车动力系统主警告灯点亮.docx",
+      "bytes": 15793,
+      "extension": ".docx",
+      "sha256": "ea6680f5d0242bbdf8e7e215a35d4f276140fcee9ad11b7207c0b10cc59181e2",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/五洲龙混合动力客车动力电池辅助充电系统维修.docx",
+      "bytes": 24171,
+      "extension": ".docx",
+      "sha256": "d6a97f6bad1440c3f569cee8c08284c2d5e9419ed7c5e1230fa478e19b647820",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/五洲龙混合电动大客车无法启动检修.docx",
+      "bytes": 20400,
+      "extension": ".docx",
+      "sha256": "c815b4f6fab384ae4c5672783047a855dd4c9548bf48d1b62ea8777943c7c2b1",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/保时捷Cayenne S E.docx",
+      "bytes": 13211,
+      "extension": ".docx",
+      "sha256": "a86630e6f398cdc4fc1619b88ff751e3b46f9b3ead759e9f6a9ffc4ea2333b2e",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/保时捷Cayenne轿车混合动力报警.docx",
+      "bytes": 12954,
+      "extension": ".docx",
+      "sha256": "1c91ce6f20b71185413a15aa40cd627d655d50e41892a0f137b6f87af79b4654",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/凯迪拉克凯雷德混合动力轿车无法启动.docx",
+      "bytes": 15010,
+      "extension": ".docx",
+      "sha256": "47134bbf1486d6ce2e14f15f4d4216df17ce9c86b8f0ca417f0be9d9b2624572",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/别克君越混合动力轿车空调间歇性不工作.docx",
+      "bytes": 14705,
+      "extension": ".docx",
+      "sha256": "43605b12bb57d303aa25f023b9b05604c50d1593df6c11f170a56a718be538a6",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/动力电池成组问题检修.docx",
+      "bytes": 14942,
+      "extension": ".docx",
+      "sha256": "b7e10132e637f4ce22de1aec06db2a76f26776eb509f7c13f76db7fd7577c306",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/动力电池断电故障检测.docx",
+      "bytes": 13599,
+      "extension": ".docx",
+      "sha256": "e12b57444b261f574bd20214ead8b8a839e0146c01d862958b8644ceafe7ce51",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/动力电池绝缘故障故障检修.docx",
+      "bytes": 146009,
+      "extension": ".docx",
+      "sha256": "33bf8c55fd976fb58180c80a7e58b4ffb1b7c1a2467600d8aed6892f007f83bc",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽E150EV电动汽车驱动电动机故障诊断.docx",
+      "bytes": 13787,
+      "extension": ".docx",
+      "sha256": "52ed821a780da371f12aa7e66ed4339b4898327eb80d4afc80bfe8952fb84f75",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽E150EV驱动电机超速保护故障诊断及排除.docx",
+      "bytes": 15700,
+      "extension": ".docx",
+      "sha256": "08f63c2d215f2edd31c2c2c93fc31da7a23dcaf9bf98cab173e6ee5aeb25831b",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽EV160电动汽车空调压缩机电控原理及故障.docx",
+      "bytes": 16800,
+      "extension": ".docx",
+      "sha256": "d67031e4ccd7365fb84a9d1e748e044ca552a194a5fff92b9d281551a2e63ae8",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽EV160纯电动汽车无法行驶.docx",
+      "bytes": 17165,
+      "extension": ".docx",
+      "sha256": "6b786aff05658c6ca6639ca2d75f5ed1bd049b4a0b1fac49da766e6e300b169c",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽EV200纯电动汽车DC.docx",
+      "bytes": 16434,
+      "extension": ".docx",
+      "sha256": "98505c381b6bd38dc0681c84c46b44c3c2bd1c426755786083bbf68703141c92",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽EV200高压系统绝缘性能检修.docx",
+      "bytes": 15938,
+      "extension": ".docx",
+      "sha256": "043cf3231813e78b100d64680d741e40af139bdecf5d751335ffe01947ea1e7b",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽新能源EV200慢充系统指示灯都不亮的检修方法.docx",
+      "bytes": 12719,
+      "extension": ".docx",
+      "sha256": "476b8bdc40cf30210a8246b64b0331f39088cdd83c933af676b7fa12b4723965",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽新能源EV200慢充系统无充电电流的检修方法.docx",
+      "bytes": 12582,
+      "extension": ".docx",
+      "sha256": "e2b0c3f093d804d2e86bbae780c9ef0148d0371601074191994e5d5c5eb3673b",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/北汽新能源EV200慢充系统无动力电池数据的检修方法.docx",
+      "bytes": 13287,
+      "extension": ".docx",
+      "sha256": "a46e9ee536f8be2f5d4de1728ec89ec1678e10b6ff8cf29601536b58398ab378",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/大众途锐混合动力车加速时发动机舱内异响.docx",
+      "bytes": 13302,
+      "extension": ".docx",
+      "sha256": "9fbe32a11a32269f8a79e98db38fb5fe5b1dbc8c8f4648b196382b0206f03907",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奇瑞艾瑞泽7e插电式混合动力模式定义.docx",
+      "bytes": 17439,
+      "extension": ".docx",
+      "sha256": "960efbc35fafe2fd136592136963932b4603bfd89a98c5875fd8eb62ef24a433",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰S400L混合动力系统CAN通信故障.docx",
+      "bytes": 16954,
+      "extension": ".docx",
+      "sha256": "51fdd9cd19d9a204762f2ff96f28e2560b8ea8929174fbf747b8fa81c12e9238",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰S400混合动力启动不着车.docx",
+      "bytes": 15484,
+      "extension": ".docx",
+      "sha256": "51ec72a500805c59f3a6ddbb1ed6f62717013c2b926ad9681e838de1af77262f",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰S400混合动力无法启动.docx",
+      "bytes": 14805,
+      "extension": ".docx",
+      "sha256": "e4c9b1d72ec0a550a524ca91771c687df5d6ca38a00f82c7ef570043419ff39a",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰S400混合动力纯电动模式不能使用.docx",
+      "bytes": 15677,
+      "extension": ".docx",
+      "sha256": "2bf86abc12ab27e079acc7de26f462196d477e11ecd21dbe8f6f7c2ca3e8922c",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰S400混合动力轿车无法启动.docx",
+      "bytes": 17080,
+      "extension": ".docx",
+      "sha256": "50c2c11815d57705079cf181e50509118d0dcf7a0f42191c154e301ded422361",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奔驰混合动力车型无法启动或组合仪表提示.docx",
+      "bytes": 12607,
+      "extension": ".docx",
+      "sha256": "6d3783e911ff7234c87d17788987c263fb69536b066fd3c06ae6a52e57bf5457",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奥迪A8L混合动力系统故障.docx",
+      "bytes": 13638,
+      "extension": ".docx",
+      "sha256": "59bc81d1ee6c1d243cce573b3fc8a68478d334284c7bcb041a8c195a12a48519",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奥迪A8混合动力更换J393无法编码故障检修.docx",
+      "bytes": 13648,
+      "extension": ".docx",
+      "sha256": "300c0b2540553d169b638c526c00a7da44a6b7e1070675c5f7747c32537dc677",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奥迪A8混合动力系统故障灯点亮.docx",
+      "bytes": 13683,
+      "extension": ".docx",
+      "sha256": "ff8f84c4deb2272c77e1b73e9d639c0481b8d6337beb83e0873093c79eff3eb3",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/奥迪A8混合动力高压蓄电池故障.docx",
+      "bytes": 18213,
+      "extension": ".docx",
+      "sha256": "73b2724a0eb38f597d55c569363fa66b33251520571bad50a9a73dd1cb429c53",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/如何保养混合动力车型库存车辆的电池.docx",
+      "bytes": 12402,
+      "extension": ".docx",
+      "sha256": "6c17dc4fb72974079843f485e1717de81d1030bf4f8d40df66a49eb4ab01b7d3",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/宝马750Li混合动力轿车高压蓄电池故障.docx",
+      "bytes": 18984,
+      "extension": ".docx",
+      "sha256": "c99ec0b194737ffe7445065ef4e8a86f826a26468be56a6218ec237625e2d77d",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/宝马750Li轿车混合动力声音报警系统失效.docx",
+      "bytes": 15671,
+      "extension": ".docx",
+      "sha256": "d9aa0cdb7b5f97d5d1f3d2104d5fd6aeba7066b078fad1fe23d6c0342fad6fae",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/宝马F04车混合动力发动机启动困难并启停功能不好用.docx",
+      "bytes": 15903,
+      "extension": ".docx",
+      "sha256": "8e2fb588b4194f45b9893cef6d426cd3ac1a579999d8db1248eae0069220ae99",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/宝马F04车系高压.docx",
+      "bytes": 12956,
+      "extension": ".docx",
+      "sha256": "be9f43ac72dbece8e9f889537bfc371d72d78916174b87a4ec6bd2da956bdd0a",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/宝马X6混合动力车无法行驶检修.docx",
+      "bytes": 13762,
+      "extension": ".docx",
+      "sha256": "a8f6df36582337974ebe44e0f6ec08043b064f92f7e8d5fb6bcd0e0507d18a27",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/帝豪EV300纯电动汽车慢充系统不能充电.docx",
+      "bytes": 14231,
+      "extension": ".docx",
+      "sha256": "a75fb9f7f797e4ff733b1264d00a6fc55192873729955596693f1641a38e8962",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/康迪K10纯电动汽车行驶途中偶尔熄火.docx",
+      "bytes": 15090,
+      "extension": ".docx",
+      "sha256": "cd093947b9ec66bae2e22b94fa6ba2fc0edec2ff225523450639393620ba63d0",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/快充桩与车辆无法通讯故障检修.docx",
+      "bytes": 15111,
+      "extension": ".docx",
+      "sha256": "6049d6b9706c077d16c4bf554acb331404152f505933398857704089941584ea",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/快充桩无充电电流故障检修.docx",
+      "bytes": 12795,
+      "extension": ".docx",
+      "sha256": "04369afc2f3e290b0f2fe6627b85e7bb2f6b54337025a9730926434e0a216b0e",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/思域1. 3L混合动力轿车常见故障排除及维修.docx",
+      "bytes": 20300,
+      "extension": ".docx",
+      "sha256": "e5e4966ac7af16a52e37d4e18abd3000dccd3b47cfbd97095b8f0aebe108b3da",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/新能源客车6速变速器噪声异常分析与研究.docx",
+      "bytes": 16356,
+      "extension": ".docx",
+      "sha256": "7c4b43234ee5df99e1a4693cbd8986214fcf0ceb9c85b1449f46c9e81d3db389",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/本田思域混合动力车EPS.docx",
+      "bytes": 37270,
+      "extension": ".docx",
+      "sha256": "4dcf91c1a58e48284f017e9448c93c843e5d79954179fdd4af99a57fd6d6eecf",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/本田雅阁混动车READY灯无法点亮.docx",
+      "bytes": 12786,
+      "extension": ".docx",
+      "sha256": "09d7e3317916d18bc8c13ebd8ab3fdce69dfe51d9e4ae237cec0f945b58bd3a4",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪e5无法交流充电故障检修.doc",
+      "bytes": 76288,
+      "extension": ".doc",
+      "sha256": "c820725f430c5bcfe647da500a766473b302742e62069aad5b7a4e2d9f92fb0a",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪F3DM电动汽车充电困难.docx",
+      "bytes": 14082,
+      "extension": ".docx",
+      "sha256": "18eef4e827da79fd3a35682014fe07785a36078f9d328134f34930e78fb9d3f4",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪电动车E6无法充电.docx",
+      "bytes": 814360,
+      "extension": ".docx",
+      "sha256": "b4af0043cf8ab26236b75aa2e2a9cd0aeea1a77254e83d4ccd361b6186fd44a0",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪秦仪表报动力系统故障及风扇常转.docx",
+      "bytes": 189464,
+      "extension": ".docx",
+      "sha256": "03c4c16e0dfa5b4039a58518387b2e3acdaf3d95cb07e84b866b308c87751e0e",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪秦偶发性SOC为0.docx",
+      "bytes": 13738,
+      "extension": ".docx",
+      "sha256": "15bf0fe7a5bf527f9390dc41344ead40386bb01ac4b25c96b5d37a4f568c6de2",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪秦无法使用EV模式.docx",
+      "bytes": 12623,
+      "extension": ".docx",
+      "sha256": "10d0247c68af4a6d95e5d0483858af738cf4bc131c177ea066c88fc16a439492",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪秦混合动力车电动模式无法行驶.docx",
+      "bytes": 13598,
+      "extension": ".docx",
+      "sha256": "d14c5e3bc87c2f857d91353c3a3673154b7b97ce4fbb214b7c32788fa745457c",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/比亚迪秦行驶中仪表偶发性提示请检查动力.docx",
+      "bytes": 12779,
+      "extension": ".docx",
+      "sha256": "85cb17b133245a6d30029aee06cf5df7116ec3607bc1c7d01211c5b553cf7675",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/江淮同悦纯电动汽车无倒挡的故障诊断.docx",
+      "bytes": 15970,
+      "extension": ".docx",
+      "sha256": "bb6e5f21ca86ce974af6c052bdc3a132262abf23aca23a6aa84520f782a067b9",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/江淮瑞风M混合动力车型技术.docx",
+      "bytes": 19050,
+      "extension": ".docx",
+      "sha256": "f227835da2e1b057ca20b739a83ad9a1d8294a4092a9b88c50f6458b1b22de24",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/混合动力变速器的结构特性与维修注意事项.docx",
+      "bytes": 19181,
+      "extension": ".docx",
+      "sha256": "e764ac6ba4f5e09ca0374c4c4d24de62d6d17a31359753fdb72f3b924bf0c45f",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/瑞风M4弱混车无法进入混合动力模式.docx",
+      "bytes": 13833,
+      "extension": ".docx",
+      "sha256": "74cf30ea714c6585f46bc964d6be4f0b73f7a927092a1e85db098c62ee546d34",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/电动公交车CAN总线故障检修.docx",
+      "bytes": 12895,
+      "extension": ".docx",
+      "sha256": "b88321091b8c5cd8eb2ea9d5406d04f272a820edbdad3e964cfbbf7ac86216b9",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/电动汽车组合仪表黑屏故障的排除.docx",
+      "bytes": 15866,
+      "extension": ".docx",
+      "sha256": "8483213bb33e1fae4191dcf5519487bec2820df84212a63a579797d3b667799b",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/纯电动汽车的电机研究.docx",
+      "bytes": 15072,
+      "extension": ".docx",
+      "sha256": "eaf35bce2ce716395ee4c8a3e2dedd0c5b78d7504032a5f537259e25b18d8815",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/英菲尼迪QX60混动车天窗无法关闭.docx",
+      "bytes": 13034,
+      "extension": ".docx",
+      "sha256": "213289edc38d3fe0922fa384e0c8bb5b92954e0ad9e9b22fcaa92990bb095df9",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/英菲尼迪QX60混动车混合动力故障灯及防侧滑指示灯突然点亮.docx",
+      "bytes": 12997,
+      "extension": ".docx",
+      "sha256": "56e1483550ed246c4cfaedb1704fc9ac8d198bcaa99fd524c1f3174a1dab72a1",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/英菲尼迪QX60混动车混合动力故障灯点亮.docx",
+      "bytes": 13664,
+      "extension": ".docx",
+      "sha256": "b8ae2f8108bee8350ddf589e3fa37d59e79d0f3491e61531d625f4c3f7c7fc23",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/金龙纯电动客车CAN故障排除.docx",
+      "bytes": 13502,
+      "extension": ".docx",
+      "sha256": "e8e69e7b6132c389d3aa9fa4835db857dfdb6c8eb76cadba6966b2f10d3a26cd",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雪佛兰沃兰达混合动力故障灯亮.docx",
+      "bytes": 14251,
+      "extension": ".docx",
+      "sha256": "81d1255d1c51a6d1d6dc21ebff60717ad9668773f18b0fb9a0a65b9f15637cb6",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雷克萨斯CT200h轿车混合动力系统报警.docx",
+      "bytes": 13986,
+      "extension": ".docx",
+      "sha256": "107811801889ddb1a45e1b0bc95fc33d5ee98930bb0aed0b01dc72c5cd210e19",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雷克萨斯ES300H混合动力轿车无法行驶.docx",
+      "bytes": 15851,
+      "extension": ".docx",
+      "sha256": "eae52106462bf3f65fefbacce331c06d88ceb412349eed0e7be407634237ba75",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雷克萨斯ES300h组合仪表显示.docx",
+      "bytes": 14245,
+      "extension": ".docx",
+      "sha256": "9c61a5b808552e068df56e33b8332f959e055c5643861c0e41e207286cbea19f",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雷克萨斯ES300H行驶时突然失去动力.docx",
+      "bytes": 16433,
+      "extension": ".docx",
+      "sha256": "57d8955c41611b779f9a8dd5e8a1a29e4a0c58e87fa581a4de3f31f8058e0113",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/雷克萨斯RX450h组合仪表显示.docx",
+      "bytes": 13962,
+      "extension": ".docx",
+      "sha256": "383942c5b308299afcd17050323e1ee3b6f02c95bc666fb5db3b3a917353c7f8",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/青年jNP6 123BEV型纯电动客车无法充电.docx",
+      "bytes": 12473,
+      "extension": ".docx",
+      "sha256": "687a95f5b36072d5ea7ddf471f275adfd00e2a52d8dcb4e8bdc3e5d0f882dc2c",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/青年电动客车充电时仪表提示.docx",
+      "bytes": 13035,
+      "extension": ".docx",
+      "sha256": "76c3d74dec9ea8ab91f597f5fe5b1ad5409bc1fedcc01a7a50fc8a17ef1dec07",
+      "temporary": false
+    },
+    {
+      "path": "data/raw/新能源汽车维修故障案例/青年电动客车无法充电.docx",
+      "bytes": 12476,
+      "extension": ".docx",
+      "sha256": "46860f92dda5dc0bcfa48fecc294a76f5e2894ba198b948812e344161ae99f1e",
+      "temporary": false
+    }
+  ],
+  "d4": {
+    "extracted_docx": 82,
+    "converted_legacy_doc": [],
+    "legacy_doc_needs_conversion": [
+      "比亚迪e5无法交流充电故障检修.doc"
+    ],
+    "errors": []
+  }
+}

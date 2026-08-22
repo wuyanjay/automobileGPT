@@ -1,0 +1,12 @@
+{
+  "split_counts": {
+    "train": 11947,
+    "validation": 635,
+    "test": 652
+  },
+  "source_counts": {
+    "d2": 12719,
+    "d3": 437,
+    "d4": 78
+  }
+}
