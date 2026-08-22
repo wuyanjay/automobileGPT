@@ -38,6 +38,25 @@ python data_pipeline/scripts/03_build_evidence.py
 
 注意：再次不带 limit 运行会原子覆盖对应中间文件，适合从 Pilot 切换到正式全量准备。
 
+### 2.1 规范化规则和抽检字段
+
+脚本 02 使用可解释规则，不依赖分类模型。规范化记录中保留以下辅助字段：
+
+- D1 `intent`：区分纯价格/选购、维修问题以及“维修问题 + 价格”的混合意图；混合意图保留并写入软 flag。
+- D2 `has_*`：仅表示正文提到了图片、链接、评论或其他回答；只有确实依赖缺失上下文时才产生阻断性的 `needs_*`。
+- D2 `risk_bypass`：只匹配绕过安全联锁、限速、气囊等明确危险组合；普通 `bypass valve` 只记录 `has_bypass_term`。
+- D3 `domain_status`：`automotive`、`non_automotive` 或 `uncertain`；不再把未命中汽车词表直接等同于非汽车。
+- D3/D4 `diagnosis_signals`：记录诊断标题、编号步骤、检查动作、检查发现、修复结果和测量信号数量。
+- D4 `document_type`：`case_evidence`、`procedure_evidence`、`technical_pt` 或 `maintenance_qa`。
+
+规则回归测试：
+
+```powershell
+python -m unittest discover -s data_pipeline/tests -v
+```
+
+全量统计位于 `data/work/reports/normalize_report.json`；抽检时应同时查看 normalized 和 rejected，不能只看保留数量。
+
 ## 3. 离线端到端冒烟测试
 
 以下命令不需要下载模型或配置 API：

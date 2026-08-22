@@ -8,3 +8,6 @@ MedicalGPT/
 __pycache__/
 *.py[cod]
 *$py.class
+
+automobileGPT/data_pipeline/test.json
+tests/

@@ -8,13 +8,16 @@ import json
 from collections import Counter
 
 from _common import (
+    classify_automotive_domain,
+    classify_d4_document,
     classify_powertrain,
+    classify_repair_intent,
     classify_system,
     context_flags,
+    diagnosis_process_signals,
     extract_literals,
     has_diagnosis_process,
     is_automotive,
-    is_fault_case,
     load_config,
     normalize_document,
     normalize_inline,
@@ -22,6 +25,7 @@ from _common import (
     pipeline_path,
     read_jsonl,
     risk_flags,
+    requires_safety_review,
     source_path,
     stable_id,
     stable_split,
@@ -56,23 +60,30 @@ def normalize_amck(config, limit=0):
         if query_key in seen_queries:
             flags.append("duplicate_query")
         combined = instruction + " " + query
-        if not is_automotive(combined, source_hint="d1"):
+        domain_status = classify_automotive_domain(combined, source_hint="d1")
+        if domain_status != "automotive":
             flags.append("off_topic")
-        if any(word in query for word in ("值得购买", "值得拥有", "能买吗", "报价", "多少钱")):
+        intent = classify_repair_intent(query)
+        if intent in ("purchase_only", "price_only"):
             flags.append("non_repair_intent")
+        elif intent in ("mixed_repair_price", "mixed_repair_purchase"):
+            flags.append(intent)
         record = {
             "query_id": stable_id("d1", query_key),
             "source_index": index,
             "instruction": instruction,
             "query": query,
             "base_answer": answer,
+            "domain_status": domain_status,
+            "intent": intent,
             "powertrain": classify_powertrain(combined),
             "system": classify_system(combined),
             "literals": extract_literals(combined),
             "flags": flags,
             "split": stable_split(query_key, train_pct, val_pct),
         }
-        if flags:
+        blocking_flags = {"empty", "duplicate_query", "off_topic", "non_repair_intent"}
+        if any(flag in blocking_flags for flag in flags):
             rejected.append(record)
             continue
         seen_queries.add(query_key)
@@ -97,11 +108,15 @@ def normalize_d2(config, limit=0):
         flags = []
         if not question or not answer:
             flags.append("empty")
-        reasons = off_topic_reasons(combined)
-        if reasons or not is_automotive(combined, source_hint="d2"):
+        # Determine the topic from the question. Examples and analogies in an
+        # otherwise useful answer must not turn an automotive question into an
+        # off-topic record (for example "spider gear" or battery "cycling").
+        reasons = off_topic_reasons(question)
+        domain_status = classify_automotive_domain(question, source_hint="d2")
+        if reasons or domain_status == "non_automotive":
             flags.append("off_topic")
-        flags.extend(context_flags(answer))
-        flags.extend(risk_flags(combined))
+        flags.extend(context_flags(answer, question))
+        flags.extend(risk_flags(answer, question))
         context_problem = any(flag.startswith("needs_") for flag in flags)
         # Broad risk flags (brakes, lifting, fuel, airbags, high voltage) are
         # review labels, not automatic evidence rejection. Only an explicit
@@ -121,6 +136,7 @@ def normalize_d2(config, limit=0):
             "answer": answer,
             "language": "en",
             "metadata": item.get("metadata", {}),
+            "domain_status": domain_status,
             "powertrain": classify_powertrain(combined),
             "system": classify_system(combined),
             "literals": extract_literals(combined),
@@ -143,21 +159,28 @@ def normalize_d3(config, limit=0):
     rejected = []
     for index, item in enumerate(read_jsonl(path)):
         text = normalize_document(item.get("input"))
+        weak_labels = normalize_document(item.get("output"))
         flags = []
-        automotive = is_automotive(text, source_hint="d3")
+        domain_status = classify_automotive_domain(text, source_hint="d3", auxiliary_text=weak_labels)
+        automotive = domain_status == "automotive"
+        diagnosis_signals = diagnosis_process_signals(text)
         diagnosis = has_diagnosis_process(text)
         if not text:
             flags.append("empty")
-        if not automotive:
+        if domain_status == "non_automotive":
             flags.append("off_topic")
+        elif domain_status == "uncertain":
+            flags.append("uncertain_domain")
         if automotive and not diagnosis:
             flags.append("no_diagnosis_process")
         record = {
             "evidence_source_id": stable_id("d3", text),
             "source_index": index,
             "text": text,
-            "weak_labels": normalize_document(item.get("output")),
+            "weak_labels": weak_labels,
             "language": "zh",
+            "domain_status": domain_status,
+            "diagnosis_signals": diagnosis_signals,
             "powertrain": classify_powertrain(text),
             "system": classify_system(text),
             "literals": extract_literals(text),
@@ -218,25 +241,37 @@ def normalize_d4(config, limit=0):
     for item in read_jsonl(path):
         title = normalize_inline(item.get("title"))
         text = normalize_document(item.get("text"))
-        fault_case = is_fault_case(title, text)
+        document_type = classify_d4_document(title, text)
+        diagnosis_signals = diagnosis_process_signals(text)
+        safety_review = requires_safety_review(title + " " + text)
         flags = []
         if not text:
             flags.append("empty")
         if item.get("media_count", 0) and len(text) < 300:
             flags.append("needs_image")
-        if not fault_case:
+        if document_type == "technical_pt":
             flags.append("technical_article")
+        elif document_type == "maintenance_qa":
+            flags.append("maintenance_qa")
+        flags.extend(risk_flags(title + " " + text))
+        if safety_review:
+            flags.append("safety_review")
+        evidence_type = document_type in ("case_evidence", "procedure_evidence")
         record = dict(item)
         record.update({
             "title": title,
             "text": text,
             "language": "zh",
+            "document_type": document_type,
+            "diagnosis_signals": diagnosis_signals,
             "powertrain": classify_powertrain(title + " " + text),
             "system": classify_system(title + " " + text),
             "literals": extract_literals(text),
-            "flags": flags,
-            "eligible_evidence": bool(text and fault_case and "needs_image" not in flags),
-            "eligible_pt": bool(text and "needs_image" not in flags),
+            "flags": sorted(set(flags)),
+            "eligible_evidence": bool(
+                text and evidence_type and "needs_image" not in flags and not safety_review
+            ),
+            "eligible_pt": bool(text and "needs_image" not in flags and not safety_review),
             "split": stable_split(item["document_id"], train_pct, val_pct),
         })
         output.append(record)
@@ -297,6 +332,12 @@ def main():
             for name, records in datasets.items()
         },
         "rejected_counts": {name: len(records) for name, records in rejected_sets.items()},
+        "classification_counts": {
+            "d1_intent": dict(Counter(record.get("intent") for record in d1 + d1_rejected)),
+            "d2_domain": dict(Counter(record.get("domain_status") for record in d2)),
+            "d3_domain": dict(Counter(record.get("domain_status") for record in d3)),
+            "d4_document_type": dict(Counter(record.get("document_type") for record in d4)),
+        },
     }
     write_json(work_dir / "reports" / "normalize_report.json", report)
     for name, records in datasets.items():
