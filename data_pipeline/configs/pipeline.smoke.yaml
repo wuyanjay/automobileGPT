@@ -30,9 +30,13 @@
   "embedding": {
     "model": "BAAI/bge-m3",
     "batch_size": 16,
-    "raw_top_k": 10,
+    "candidate_pool_k": 50,
     "final_top_k": 3,
     "min_score": null,
+    "system_match_bonus": 0.02,
+    "system_mismatch_penalty": 0.03,
+    "dtc_boost": 0.05,
+    "dedup_similarity": 0.98,
     "pilot_query_limit": 10
   },
   "generation": {

@@ -83,11 +83,20 @@ pip install -r data_pipeline/requirements-colab.txt
 python data_pipeline/scripts/04_embed_retrieve.py \
   --backend sentence-transformers \
   --model BAAI/bge-m3 \
-  --run-name pilot_v1 \
+  --run-name pilot_v2 \
+  --embedding-cache-name pilot_v1 \
   --query-limit 1000
 ```
 
-先人工查看 `data/work/retrieval/pilot_v1/retrieval_*.jsonl` 中 100 条 Top-3。若需要剔除极低分候选，在下一次检索加入 `--min-score`；阈值应由抽检决定，不要照搬固定值。
+`--embedding-cache-name pilot_v1` 会尝试复用上一轮 BGE-M3 向量，同时把新结果写到
+`retrieval/pilot_v2` 和 `review/pilot_v2`；如果旧缓存不存在，脚本会自动重新计算。
+
+正式配置默认先屏蔽明确冲突的动力类型，再从 Top-50 候选池中进行 system 软评分、DTC
+加分和候选去重，并以原始相似度 `0.55` 清理低分尾部。人工查看
+`data/work/review/pilot_v2/retrieval_samples.jsonl` 中的 100 条 Top-3，并结合
+`retrieval/pilot_v2/retrieval_report.json` 的分数区间、无候选原因和去重统计决定是否继续调整。
+可用 `--min-score` 或 `--candidate-pool-k` 临时覆盖正式配置；阈值只负责清理低分候选，
+最终是否采用 Evidence 仍由 05 的 route 判断。
 
 ## 5. LLM 改写与 Evidence→QA
 
@@ -98,8 +107,8 @@ $env:LLM_BASE_URL = "https://你的服务地址/v1"
 $env:LLM_MODEL = "你的模型名"
 $env:LLM_API_KEY = "你的密钥"
 
-python data_pipeline/scripts/05_rewrite_amck.py --provider api --run-name pilot_v1 --limit 1000
-python data_pipeline/scripts/06_generate_evidence_qa.py --provider api --run-name pilot_v1 --limit 500
+python data_pipeline/scripts/05_rewrite_amck.py --provider api --run-name pilot_v2 --limit 1000
+python data_pipeline/scripts/06_generate_evidence_qa.py --provider api --run-name pilot_v2 --limit 500
 ```
 
 生成脚本每 100 条原子保存一次，重复运行同一 `run-name` 会跳过已成功记录。失败或 literal 校验不通过的记录位于 `data/work/rejected/<run-name>`。

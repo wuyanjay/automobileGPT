@@ -9,5 +9,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 
-automobileGPT/data_pipeline/test.json
+/data_pipeline/test.json
 tests/
+!/data_pipeline/tests/
+!/data_pipeline/tests/*.py

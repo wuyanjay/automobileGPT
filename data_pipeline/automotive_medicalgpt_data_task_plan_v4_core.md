@@ -271,19 +271,22 @@ data/work/evidence/evidence_stats.json
 每条 AMCK：
 
 1. 计算与同 split Evidence 的余弦相似度；
-2. 取原始 Top-10；
-3. 如果 query 与 candidate 的已知 `powertrain` 冲突，删除 candidate；
-4. 如果双方 `system` 已知且不同，删除 candidate；
-5. query 中有 DTC 时，包含相同 DTC 的候选优先；
-6. 最终保留 Top-3 交给改写模型。
+2. 在取候选池前删除与 query 明确 `powertrain` 冲突的 Evidence；
+3. 从剩余 Evidence 中取原始 Top-50 候选池；
+4. 双方 `system` 已知且相同时加 `0.02`，已知且不同时减 `0.03`，不再硬删除；
+5. query 中有 DTC 时，包含相同 DTC 的候选加 `0.05`；
+6. 使用原始余弦分数 `0.55` 清理低分尾部，不用元数据加分救回低分候选；
+7. 去除同 source record、相同文本和极高向量相似的重复候选；
+8. 最终保留 Top-3 交给改写模型。
 
-不直接写死相似度阈值。随机选择 100 条 AMCK 查看 Top-3：
+`0.55` 是根据 Pilot V1 的 100 条 Top-3 抽检得到的保守起点，只负责清理低分尾部。
+每次调整召回规则后继续使用相同 query ID 做 A/B 检查：
 
 - 相关案例进入 Top-3 的比例；
 - 明显错误系统匹配的比例；
 - 完全没有可用证据的比例。
 
-根据这 100 条确定一个简单阈值。阈值只负责剔除极低相似度，不负责判断最终能否迁移。
+阈值不负责判断最终能否迁移；该判断仍由下一阶段的 route 完成。
 
 输出：
 
