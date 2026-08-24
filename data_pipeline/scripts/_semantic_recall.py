@@ -35,7 +35,7 @@ D1_PROMPT = """任务：复核一条被判为price_only的汽车问答问题。
 
 标签定义：
 - price_only：核心诉求只是价格、报价、工时费或更换费用。仅仅提到部件损坏、事故外观、已经更换某件，或问“换X多少钱”，仍是price_only。
-- mixed_repair_price：除价格外，用户还明确要求诊断原因、判断已有维修结论是否正确、提供检查/排查/处理方案、判断维修范围/必要性，或评估故障是否影响安全。这个维修诉求必须能够脱离价格问题独立成立。
+- mixed_repair_price：除价格外，用户还针对现有故障、损坏或正常保养明确要求诊断原因、判断已有维修结论是否正确、提供检查/排查/处理方案、判断维修与更换范围/必要性，或评估故障是否影响安全。这个维修诉求必须能够脱离价格问题独立成立。
 
 特别注意以下表达属于独立维修诉求，应判为mixed_repair_price：
 - “怎么调/怎么修/怎么处理 + 多少钱”；
@@ -43,20 +43,31 @@ D1_PROMPT = """任务：复核一条被判为price_only的汽车问答问题。
 - “能否只换局部/是否必须整体更换 + 多少钱”；
 - “有没有必要做某项维修/已有维修判断是否合理 + 价格”。
 
-以下情况仍是price_only：只问“换X多少钱”、只问哪里购买/安装、只问4S店和外面的价格差异，或只描述损坏后询价而没有询问原因、方法、范围、必要性或安全影响。
+以下情况仍是price_only，不得因出现“可以吗、什么、怎么、需要”等普通疑问词而召回：
+- 加装附件、功能改装、性能改装、改什么产品，或询问4S店能否安装；这些不是故障维修。
+- 购买渠道、办理地点、维修店选择、保修政策、配钥匙地点等服务信息。
+- 年检标志、材料准备等行政办理流程。
+- 同时询问两个或多个部位分别多少钱，但没有询问诊断、方法、维修范围或必要性。
+- 只问“换X多少钱”，或只描述损坏、老化、已经更换某件后询价。
+
+“能否只修局部/是否必须整体更换”只有在针对现有故障或损坏、确实比较维修范围时才是mixed_repair_price。正常保养中询问应做项目、技术规格或更换周期也可以是mixed_repair_price；单纯询问机油/配件品牌和购买价格仍是price_only。
 
 判定示例：
 - “换压缩机多少钱” -> price_only。
 - “外倾角怎么调，大概多少钱” -> mixed_repair_price。
 - “二保该换什么，工时一般多少钱” -> mixed_repair_price。
 - “灯罩破了能只换灯罩吗，多少钱” -> mixed_repair_price。
+- “4S店可以加装摄像头吗，费用多少” -> price_only。
+- “哪里能买三元催化，多少钱，保修吗” -> price_only。
+- “检验标志怎么领取，需要什么材料、多少钱” -> price_only。
+- “保险杠亮条多少钱，小面积补漆多少钱” -> price_only。
 
-只有明确属于mixed_repair_price时decision才可为recall；其余为keep_rejected；有歧义为review。
+decision只能填写recall、keep_rejected、review三者之一，绝对不能填写price_only或mixed_repair_price。只有明确属于mixed_repair_price时decision才可为recall；其余为keep_rejected；有歧义为review。
 supporting_quotes必须摘录能够证明“独立维修诉求”的原文，不能只摘录价格或损坏部件名称。
 引用必须逐字复制，包括原文中的重复字、错别字和标点，不得顺手纠正。
 
 输出字段：
-{"decision":"recall|keep_rejected|review","label":"mixed_repair_price|price_only","confidence":"high|medium|low","supporting_quotes":[],"action_quotes":[],"finding_quotes":[],"verification_quotes":[],"unsafe_operation":false,"reason":"不超过60字"}
+{"decision":"recall|keep_rejected|review","label":"mixed_repair_price|price_only","confidence":"high|medium|low","supporting_quotes":[],"unsafe_operation":false,"reason":"不超过60字"}
 """
 
 
@@ -92,6 +103,7 @@ decision规则：
 - diagnostic_case至少需要action_quotes，以及finding_quotes或verification_quotes。
 - diagnostic_procedure至少需要action_quotes和finding_quotes。
 - 引用必须逐字复制，包括原文中的重复字、错别字和标点，不得改写。
+- 优先选择短而连续的原文片段；如句中带有“”等引号，可避开引号只摘录引号内外的连续文字，减少纯排版差异。
 
 置信度与decision必须一致：
 - 证据足以明确召回或明确拒绝时使用high。
@@ -165,8 +177,14 @@ def build_prompt(dataset, record):
 
 
 def quote_supported(quote, source_text):
-    quote = normalize_inline(quote)
-    source_text = normalize_inline(source_text)
+    # Treat typography-only quote mark variants as equivalent while preserving
+    # every letter, number, unit and other punctuation in the cited text.
+    quote_marks = str.maketrans({
+        "“": '"', "”": '"', "„": '"', "‟": '"',
+        "‘": "'", "’": "'", "‚": "'", "‛": "'",
+    })
+    quote = normalize_inline(quote).translate(quote_marks)
+    source_text = normalize_inline(source_text).translate(quote_marks)
     return len(quote) >= 4 and quote in source_text
 
 
@@ -393,7 +411,7 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
     normalized_dir = work_dir / "normalized"
     rejected_dir = work_dir / "rejected" / "normalize"
     model_name = settings.get("model", "Qwen/Qwen3-4B-Instruct-2507")
-    prompt_version = settings.get("prompt_version", "v2")
+    prompt_version = settings.get("prompt_version", "v3")
     batch_size = max(1, int(settings.get("batch_size", 4)))
     save_every = max(batch_size, int(settings.get("save_every", 20)))
     seed = int(config.get("seed", 42))

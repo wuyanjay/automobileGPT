@@ -30,7 +30,7 @@
   "semantic_recall": {
     "enabled": true,
     "model": "Qwen/Qwen3-4B-Instruct-2507",
-    "prompt_version": "v2",
+    "prompt_version": "v3",
     "load_in_4bit": true,
     "batch_size": 4,
     "max_input_tokens": 8192,

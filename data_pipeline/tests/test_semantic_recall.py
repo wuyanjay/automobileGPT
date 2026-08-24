@@ -19,6 +19,7 @@ from _semantic_recall import (  # noqa: E402
     is_semantic_candidate,
     merge_effective_d1,
     parse_decision,
+    quote_supported,
     recalled_record,
     run_semantic_recall,
 )
@@ -79,6 +80,18 @@ class PromptContractTests(unittest.TestCase):
         self.assertIn("二保该换什么", D1_PROMPT)
         self.assertIn("灯罩破了能只换灯罩吗", D1_PROMPT)
 
+    def test_d1_prompt_rejects_non_repair_service_and_modification(self):
+        self.assertIn("功能改装", D1_PROMPT)
+        self.assertIn("行政办理流程", D1_PROMPT)
+        self.assertIn("4S店可以加装摄像头吗", D1_PROMPT)
+        self.assertIn("保险杠亮条多少钱", D1_PROMPT)
+
+    def test_d1_prompt_has_strict_decision_enum_and_small_schema(self):
+        self.assertIn("绝对不能填写price_only", D1_PROMPT)
+        output_schema = D1_PROMPT.split("输出字段：", 1)[1]
+        self.assertNotIn("action_quotes", output_schema)
+        self.assertNotIn("finding_quotes", output_schema)
+
     def test_evidence_prompt_does_not_trust_article_style(self):
         self.assertIn("标题、文体和来源不能决定分类", EVIDENCE_PROMPT)
         self.assertIn("技术研究文章", EVIDENCE_PROMPT)
@@ -96,6 +109,12 @@ class PromptContractTests(unittest.TestCase):
 
 
 class ValidationTests(unittest.TestCase):
+    def test_quote_support_allows_typographic_quote_marks_only(self):
+        source = "试车后原来的“刺耳蜂鸣”声完全消除,噪声为80dB。"
+        self.assertTrue(quote_supported('原来的"刺耳蜂鸣"声完全消除', source))
+        self.assertFalse(quote_supported('原来的"刺耳蜂鸣"声有所减轻', source))
+        self.assertFalse(quote_supported("噪声为83dB", source))
+
     def test_d1_high_confidence_grounded_recall_is_accepted(self):
         record = {
             "query_id": "d1_3",
