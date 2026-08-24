@@ -27,14 +27,28 @@
     "include_unsafe_evidence": false,
     "include_context_dependent_d2": false
   },
+  "semantic_recall": {
+    "enabled": true,
+    "model": "Qwen/Qwen3-4B-Instruct-2507",
+    "prompt_version": "v1",
+    "load_in_4bit": true,
+    "batch_size": 4,
+    "max_input_tokens": 8192,
+    "max_new_tokens": 384,
+    "save_every": 20,
+    "review_limit": 300
+  },
   "embedding": {
     "model": "BAAI/bge-m3",
     "batch_size": 16,
     "candidate_pool_k": 50,
-    "final_top_k": 3,
+    "final_top_k": 5,
     "min_score": 0.55,
-    "system_match_bonus": 0.02,
-    "system_mismatch_penalty": 0.03,
+    "symptom_weight": 0.75,
+    "system_match_bonus": 0.01,
+    "system_mismatch_penalty": 0.0,
+    "powertrain_mismatch_penalty": 0.01,
+    "diversity_score_margin": 0.08,
     "dtc_boost": 0.05,
     "dedup_similarity": 0.98,
     "pilot_query_limit": 1000
@@ -45,7 +59,7 @@
     "base_url_env": "LLM_BASE_URL",
     "api_key_env": "LLM_API_KEY",
     "temperature": 0.1,
-    "save_every": 100,
+    "save_every": 10,
     "attempts": 3
   },
   "export": {

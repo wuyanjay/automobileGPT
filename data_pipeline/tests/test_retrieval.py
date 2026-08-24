@@ -71,7 +71,7 @@ class RetrievalTests(unittest.TestCase):
             **options
         )
 
-    def test_powertrain_conflict_is_removed_before_candidate_pool(self):
+    def test_powertrain_conflict_is_soft_penalty_not_hard_mask(self):
         results, stats = self.run_retrieve(
             query(powertrain="bev"),
             [
@@ -83,12 +83,14 @@ class RetrievalTests(unittest.TestCase):
                 [1.0, 0.0],
                 [0.8, 0.6],
             ],
-            candidate_pool_k=1,
-            final_top_k=1,
+            candidate_pool_k=2,
+            final_top_k=2,
+            dedup_similarity=None,
         )
 
-        self.assertEqual(results[0]["candidates"][0]["evidence_id"], "e2")
-        self.assertEqual(stats["powertrain_conflicts_masked"], 1)
+        self.assertEqual(results[0]["candidates"][0]["evidence_id"], "e1")
+        self.assertEqual(results[0]["candidates"][0]["powertrain_adjustment"], -0.01)
+        self.assertEqual(stats["powertrain_mismatch_candidates"], 1)
 
     def test_system_mismatch_is_penalized_instead_of_deleted(self):
         results, stats = self.run_retrieve(
@@ -185,6 +187,52 @@ class RetrievalTests(unittest.TestCase):
 
         self.assertEqual([item["evidence_id"] for item in results[0]["candidates"]], ["e1", "e3"])
         self.assertEqual(stats["deduplicated_near_text"], 1)
+
+    def test_symptom_and_context_views_are_fused(self):
+        results, _ = self.run_retrieve(
+            query(),
+            [evidence(1), evidence(2)],
+            [1.0, 0.0],
+            [[1.0, 0.0], [0.0, 1.0]],
+            context_query_matrix=np.asarray([[0.0, 1.0]], dtype=np.float32),
+            symptom_weight=0.75,
+            final_top_k=2,
+            dedup_similarity=None,
+        )
+
+        candidates = results[0]["candidates"]
+        self.assertEqual([item["evidence_id"] for item in candidates], ["e1", "e2"])
+        self.assertEqual(candidates[0]["symptom_score"], 1.0)
+        self.assertEqual(candidates[0]["context_score"], 0.0)
+
+    def test_close_alternate_system_is_kept_for_diversity(self):
+        results, stats = self.run_retrieve(
+            query(system="engine"),
+            [
+                evidence(1, system="engine"),
+                evidence(2, system="engine"),
+                evidence(3, system="engine"),
+                evidence(4, system="transmission"),
+            ],
+            [1.0, 0.0, 0.0, 0.0],
+            [
+                [0.90, 0.0, 0.0, 0.0],
+                [0.89, 0.0, 0.0, 0.0],
+                [0.88, 0.0, 0.0, 0.0],
+                [0.85, 0.0, 0.0, 0.0],
+            ],
+            final_top_k=3,
+            system_match_bonus=0.0,
+            system_mismatch_penalty=0.0,
+            diversity_score_margin=0.08,
+            dedup_similarity=None,
+        )
+
+        self.assertEqual(
+            [item["evidence_id"] for item in results[0]["candidates"]],
+            ["e1", "e2", "e4"],
+        )
+        self.assertEqual(stats["system_diversity_candidates_added"], 1)
 
 
 if __name__ == "__main__":

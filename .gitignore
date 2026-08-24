@@ -1,8 +1,34 @@
 MedicalGPT/
 
 # Generated data pipeline artifacts
-# /data_pipeline/data/work/
 /data_pipeline/data/final/
+
+# work is local by default. Keep only the stage-02 handoff required for Colab
+# stages 03-04; semantic/evidence/embedding/retrieval outputs are copied back manually.
+/data_pipeline/data/work/*
+!/data_pipeline/data/work/normalized/
+!/data_pipeline/data/work/rejected/
+!/data_pipeline/data/work/reports/
+/data_pipeline/data/work/normalized/*
+!/data_pipeline/data/work/normalized/d1_amck.jsonl
+!/data_pipeline/data/work/normalized/d2_mechanics.jsonl
+!/data_pipeline/data/work/normalized/d3_faults.jsonl
+!/data_pipeline/data/work/normalized/d4_documents.jsonl
+/data_pipeline/data/work/rejected/*
+!/data_pipeline/data/work/rejected/normalize/
+/data_pipeline/data/work/rejected/normalize/*
+!/data_pipeline/data/work/rejected/normalize/d1_amck.jsonl
+!/data_pipeline/data/work/rejected/normalize/d3_faults.jsonl
+!/data_pipeline/data/work/rejected/normalize/d4_documents.jsonl
+/data_pipeline/data/work/reports/*
+!/data_pipeline/data/work/reports/normalize_report.json
+
+# Smoke-test artifacts live outside the formal work directory.
+/data_pipeline/.tmp/
+
+
+# Local LLM credentials
+/data_pipeline/.env
 
 # Python
 __pycache__/

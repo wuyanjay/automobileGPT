@@ -13,6 +13,7 @@ from collections import defaultdict
 from _common import (
     api_chat,
     load_config,
+    load_env_file,
     normalize_document,
     parse_model_json,
     pipeline_path,
@@ -127,6 +128,7 @@ def main():
     parser.add_argument("--model", default=None)
     parser.add_argument("--base-url", default=None)
     parser.add_argument("--api-key-env", default=None)
+    parser.add_argument("--env-file", default=None, help="Defaults to data_pipeline/.env")
     parser.add_argument("--splits", default="train,validation,test")
     parser.add_argument("--limit", type=int, default=500, help="Maximum new samples per split")
     parser.add_argument("--no-resume", action="store_true")
@@ -134,6 +136,7 @@ def main():
     parser.add_argument("--sleep", type=float, default=0.0)
     parser.add_argument("--seed", type=int, default=None)
     args = parser.parse_args()
+    load_env_file(args.env_file)
     config = load_config(args.config)
     seed = args.seed if args.seed is not None else int(config.get("seed", 42))
     work_dir = pipeline_path(config, "work")
@@ -147,6 +150,7 @@ def main():
         raise RuntimeError("Missing model. Pass --model or set LLM_MODEL/OPENAI_MODEL.")
     attempts = int(generation.get("attempts", 3))
     save_every = int(generation.get("save_every", 100))
+    progress_every = int(generation.get("progress_every", 10))
     max_chars = int(config["filters"].get("max_evidence_chars", 6000))
     generated_dir = work_dir / "generated" / args.run_name
     rejected_dir = work_dir / "rejected" / args.run_name
@@ -179,6 +183,12 @@ def main():
         candidates = balanced_records(candidates, args.limit, seed=seed)
         output = list(existing)
         rejected = []
+        print(
+            "{}: starting {} Evidence records; progress/checkpoint every {}".format(
+                split, len(candidates), save_every
+            ),
+            flush=True,
+        )
         for index, evidence in enumerate(candidates, 1):
             prompt = build_prompt(evidence, max_chars)
             input_hash = generation_input_hash(evidence, max_chars, provider, model)
@@ -234,11 +244,6 @@ def main():
                     existing_by_evidence[evidence["evidence_id"]] = record
                 else:
                     rejected.append(record)
-                if index % save_every == 0:
-                    write_jsonl(output_path, output)
-                    write_jsonl(rejected_dir / ("evidence_qa_{}.jsonl".format(split)), rejected)
-                if args.sleep:
-                    time.sleep(args.sleep)
             except Exception as exc:
                 rejected.append({
                     "evidence_id": evidence["evidence_id"],
@@ -248,6 +253,19 @@ def main():
                 })
                 if args.fail_fast:
                     raise
+            finally:
+                if index % save_every == 0:
+                    write_jsonl(output_path, output)
+                    write_jsonl(rejected_dir / ("evidence_qa_{}.jsonl".format(split)), rejected)
+                if index % progress_every == 0:
+                    print(
+                        "{}: processed={}/{}, output={}, rejected={}".format(
+                            split, index, len(candidates), len(output), len(rejected)
+                        ),
+                        flush=True,
+                    )
+                if args.sleep:
+                    time.sleep(args.sleep)
         write_jsonl(output_path, output)
         write_jsonl(rejected_dir / ("evidence_qa_{}.jsonl".format(split)), rejected)
         report["splits"][split] = {

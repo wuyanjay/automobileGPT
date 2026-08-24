@@ -114,13 +114,15 @@ def dtc_set(record):
     return result
 
 
-def powertrain_compatible(query, evidence):
+def powertrain_adjustment(query, evidence, mismatch_penalty):
+    """Treat noisy powertrain labels as a soft hint, never as a hard mask."""
     query_powertrain = query.get("powertrain", "unknown")
     evidence_powertrain = evidence.get("powertrain", "unknown")
-    return not (
+    mismatch = (
         query_powertrain != "unknown" and evidence_powertrain != "unknown"
         and query_powertrain != evidence_powertrain
     )
+    return (-float(mismatch_penalty), "mismatch") if mismatch else (0.0, "compatible")
 
 
 def system_adjustment(query, evidence, match_bonus, mismatch_penalty):
@@ -200,8 +202,12 @@ def retrieve(
     system_mismatch_penalty=0.03,
     dtc_boost=0.05,
     dedup_similarity=0.98,
+    context_query_matrix=None,
+    symptom_weight=0.75,
+    powertrain_mismatch_penalty=0.01,
+    diversity_score_margin=0.08,
 ):
-    """Retrieve diverse candidates and return results plus aggregate diagnostics."""
+    """Retrieve with symptom/context fusion and soft metadata adjustments."""
     results = []
     stats = Counter()
     stats["queries"] = len(query_records)
@@ -220,51 +226,38 @@ def retrieve(
             for query in query_records
         ], dict(stats)
 
-    compatible_by_powertrain = {}
-    for powertrain in {record.get("powertrain", "unknown") for record in query_records}:
-        compatible_by_powertrain[powertrain] = np.asarray([
-            index
-            for index, evidence in enumerate(evidence_records)
-            if powertrain_compatible({"powertrain": powertrain}, evidence)
-        ], dtype=np.int64)
     evidence_dtcs = [dtc_set(record) for record in evidence_records]
     evidence_keys = [normalized_evidence_key(record) for record in evidence_records]
+    context_query_matrix = query_matrix if context_query_matrix is None else context_query_matrix
+    symptom_weight = float(symptom_weight)
+    if not 0.0 <= symptom_weight <= 1.0:
+        raise ValueError("symptom_weight must be between 0 and 1")
 
     for start in range(0, len(query_records), 128):
-        block = query_matrix[start:start + 128]
-        score_block = np.matmul(block, evidence_matrix.T)
-        for offset, scores in enumerate(score_block):
+        symptom_block = query_matrix[start:start + 128]
+        context_block = context_query_matrix[start:start + 128]
+        symptom_scores_block = np.matmul(symptom_block, evidence_matrix.T)
+        context_scores_block = np.matmul(context_block, evidence_matrix.T)
+        fused_scores_block = (
+            symptom_weight * symptom_scores_block
+            + (1.0 - symptom_weight) * context_scores_block
+        )
+        for offset, scores in enumerate(fused_scores_block):
             query = query_records[start + offset]
-            query_powertrain = query.get("powertrain", "unknown")
-            compatible_indices = compatible_by_powertrain[query_powertrain]
-            stats["powertrain_conflicts_masked"] += len(evidence_records) - len(compatible_indices)
-            if not len(compatible_indices):
-                results.append({
-                    "query_id": query["query_id"],
-                    "split": query["split"],
-                    "retrieval_status": "no_candidate",
-                    "no_candidate_reason": "powertrain_conflict",
-                    "confidence": "none",
-                    "candidates": [],
-                })
-                stats["queries_without_candidates"] += 1
-                stats["no_candidate_powertrain_conflict"] += 1
-                continue
-
-            compatible_scores = scores[compatible_indices]
-            k = min(candidate_pool_k, len(compatible_indices))
-            if k == len(compatible_indices):
-                pool_positions = np.argsort(-compatible_scores)[:k]
+            symptom_scores = symptom_scores_block[offset]
+            context_scores = context_scores_block[offset]
+            k = min(candidate_pool_k, len(evidence_records))
+            if k == len(evidence_records):
+                raw_indices = np.argsort(-scores)[:k]
             else:
-                pool_positions = np.argpartition(-compatible_scores, k - 1)[:k]
-                pool_positions = pool_positions[np.argsort(-compatible_scores[pool_positions])]
-            raw_indices = compatible_indices[pool_positions]
+                raw_indices = np.argpartition(-scores, k - 1)[:k]
+                raw_indices = raw_indices[np.argsort(-scores[raw_indices])]
             stats["candidate_pool_records"] += len(raw_indices)
             query_dtcs = dtc_set(query)
             if query_dtcs:
                 stats["queries_with_dtc"] += 1
             candidates = []
-            for index in raw_indices:
+            for raw_rank, index in enumerate(raw_indices, start=1):
                 evidence = evidence_records[int(index)]
                 raw_score = float(scores[int(index)])
                 if min_score is not None and raw_score < min_score:
@@ -274,6 +267,10 @@ def retrieve(
                     query, evidence, system_match_bonus, system_mismatch_penalty,
                 )
                 stats["system_{}_candidates".format(system_relation)] += 1
+                powertrain_delta, powertrain_relation = powertrain_adjustment(
+                    query, evidence, powertrain_mismatch_penalty,
+                )
+                stats["powertrain_{}_candidates".format(powertrain_relation)] += 1
                 dtc_delta = (
                     float(dtc_boost)
                     if query_dtcs and query_dtcs.intersection(evidence_dtcs[int(index)])
@@ -281,12 +278,16 @@ def retrieve(
                 )
                 if dtc_delta:
                     stats["dtc_boosted_candidates"] += 1
-                adjusted = raw_score + system_delta + dtc_delta
+                adjusted = raw_score + system_delta + powertrain_delta + dtc_delta
                 candidates.append({
                     "evidence_id": evidence["evidence_id"],
                     "score": round(raw_score, 6),
                     "raw_score": round(raw_score, 6),
+                    "symptom_score": round(float(symptom_scores[int(index)]), 6),
+                    "context_score": round(float(context_scores[int(index)]), 6),
+                    "raw_rank": raw_rank,
                     "system_adjustment": round(system_delta, 6),
+                    "powertrain_adjustment": round(powertrain_delta, 6),
                     "dtc_adjustment": round(dtc_delta, 6),
                     "adjusted_score": round(adjusted, 6),
                     "source": evidence["source"],
@@ -296,8 +297,8 @@ def retrieve(
                 })
             candidates.sort(key=lambda item: item["adjusted_score"], reverse=True)
 
-            selected = []
-            selected_indices = []
+            unique_candidates = []
+            unique_indices = []
             seen_source_records = set()
             seen_texts = set()
             for candidate in candidates:
@@ -311,18 +312,35 @@ def retrieve(
                 if text_key and text_key in seen_texts:
                     stats["deduplicated_exact_text"] += 1
                     continue
-                if near_duplicate(index, selected_indices, evidence_matrix, dedup_similarity):
+                if near_duplicate(index, unique_indices, evidence_matrix, dedup_similarity):
                     stats["deduplicated_near_text"] += 1
                     continue
-                candidate.pop("_index", None)
-                selected.append(candidate)
-                selected_indices.append(index)
+                unique_candidates.append(candidate)
+                unique_indices.append(index)
                 if source_record_id:
                     seen_source_records.add(source_record_id)
                 if text_key:
                     seen_texts.add(text_key)
-                if len(selected) >= final_top_k:
-                    break
+            selected = list(unique_candidates[:final_top_k])
+            if selected and final_top_k > 1:
+                selected_systems = {
+                    item.get("system", "other") for item in selected
+                    if item.get("system", "other") != "other"
+                }
+                top_system = selected[0].get("system", "other")
+                top_score = selected[0]["adjusted_score"]
+                if len(selected_systems) <= 1 and top_system != "other":
+                    alternate = next((
+                        item for item in unique_candidates[final_top_k:]
+                        if item.get("system", "other") not in ("other", top_system)
+                        and item["adjusted_score"] >= top_score - float(diversity_score_margin)
+                    ), None)
+                    if alternate is not None:
+                        selected[-1] = alternate
+                        selected.sort(key=lambda item: item["adjusted_score"], reverse=True)
+                        stats["system_diversity_candidates_added"] += 1
+            for candidate in selected:
+                candidate.pop("_index", None)
 
             if selected:
                 status = "retrieved"
@@ -383,6 +401,11 @@ def main():
     batch_size = embedding_cfg.get("batch_size", 16)
     system_match_bonus = float(embedding_cfg.get("system_match_bonus", 0.02))
     system_mismatch_penalty = float(embedding_cfg.get("system_mismatch_penalty", 0.03))
+    symptom_weight = float(embedding_cfg.get("symptom_weight", 0.75))
+    powertrain_mismatch_penalty = float(
+        embedding_cfg.get("powertrain_mismatch_penalty", 0.01)
+    )
+    diversity_score_margin = float(embedding_cfg.get("diversity_score_margin", 0.08))
     dtc_boost = float(embedding_cfg.get("dtc_boost", 0.05))
     dedup_similarity = embedding_cfg.get("dedup_similarity", 0.98)
     if dedup_similarity is not None:
@@ -398,10 +421,19 @@ def main():
     embedding_dir = ensure_dir(work_dir / "embeddings" / embedding_cache_name)
     retrieval_dir = ensure_dir(work_dir / "retrieval" / args.run_name)
 
-    all_queries = list(read_jsonl(work_dir / "normalized" / "d1_amck.jsonl"))
+    semantic_query_path = work_dir / "semantic" / "effective_d1_amck.jsonl"
+    normalized_query_path = work_dir / "normalized" / "d1_amck.jsonl"
+    query_source_path = semantic_query_path if semantic_query_path.exists() else normalized_query_path
+    if not semantic_query_path.exists():
+        print(
+            "warning: semantic/effective_d1_amck.jsonl is missing; "
+            "using the stage-02 D1 baseline. Run stage 03 first for semantic recall."
+        )
+    all_queries = list(read_jsonl(query_source_path))
     run_report = {
         "backend": args.backend,
         "model": model_name,
+        "query_source": str(query_source_path),
         "embedding_cache_name": embedding_cache_name,
         "settings": {
             "candidate_pool_k": candidate_pool_k,
@@ -409,6 +441,9 @@ def main():
             "min_score": min_score,
             "system_match_bonus": system_match_bonus,
             "system_mismatch_penalty": system_mismatch_penalty,
+            "symptom_weight": symptom_weight,
+            "powertrain_mismatch_penalty": powertrain_mismatch_penalty,
+            "diversity_score_margin": diversity_score_margin,
             "dtc_boost": dtc_boost,
             "dedup_similarity": dedup_similarity,
         },
@@ -421,15 +456,24 @@ def main():
         if query_limit and query_limit > 0:
             queries = queries[:query_limit]
         evidence = list(read_jsonl(work_dir / "evidence" / ("evidence_{}.jsonl".format(split))))
-        query_texts = [record["instruction"] + "\n" + record["query"] for record in queries]
+        symptom_query_texts = [record["query"] for record in queries]
+        context_query_texts = [
+            record["instruction"] + "\n" + record["query"] for record in queries
+        ]
         evidence_texts = [record["text"] for record in evidence]
         query_ids = [record["query_id"] for record in queries]
         evidence_ids = [record["evidence_id"] for record in evidence]
-        query_matrix, query_cached = load_or_embed(
-            embedding_dir / ("queries_{}.npy".format(split)),
-            embedding_dir / ("query_ids_{}.json".format(split)),
-            embedding_dir / ("query_meta_{}.json".format(split)),
-            query_ids, query_texts, args.backend, model_name, batch_size,
+        symptom_query_matrix, symptom_query_cached = load_or_embed(
+            embedding_dir / ("queries_symptom_{}.npy".format(split)),
+            embedding_dir / ("query_ids_symptom_{}.json".format(split)),
+            embedding_dir / ("query_meta_symptom_{}.json".format(split)),
+            query_ids, symptom_query_texts, args.backend, model_name, batch_size,
+        )
+        context_query_matrix, context_query_cached = load_or_embed(
+            embedding_dir / ("queries_context_{}.npy".format(split)),
+            embedding_dir / ("query_ids_context_{}.json".format(split)),
+            embedding_dir / ("query_meta_context_{}.json".format(split)),
+            query_ids, context_query_texts, args.backend, model_name, batch_size,
         )
         evidence_matrix, evidence_cached = load_or_embed(
             embedding_dir / ("evidence_{}.npy".format(split)),
@@ -438,12 +482,16 @@ def main():
             evidence_ids, evidence_texts, args.backend, model_name, batch_size,
         )
         results, retrieval_stats = retrieve(
-            queries, evidence, query_matrix, evidence_matrix,
+            queries, evidence, symptom_query_matrix, evidence_matrix,
             candidate_pool_k, final_top_k, min_score,
             system_match_bonus=system_match_bonus,
             system_mismatch_penalty=system_mismatch_penalty,
             dtc_boost=dtc_boost,
             dedup_similarity=dedup_similarity,
+            context_query_matrix=context_query_matrix,
+            symptom_weight=symptom_weight,
+            powertrain_mismatch_penalty=powertrain_mismatch_penalty,
+            diversity_score_margin=diversity_score_margin,
         )
         write_jsonl(retrieval_dir / ("retrieval_{}.jsonl".format(split)), results)
         query_by_id = {record["query_id"]: record for record in queries}
@@ -479,7 +527,8 @@ def main():
                 sum(len(record["candidates"]) for record in results) / float(len(results))
                 if results else 0.0
             ),
-            "query_embeddings_cached": query_cached,
+            "symptom_query_embeddings_cached": symptom_query_cached,
+            "context_query_embeddings_cached": context_query_cached,
             "evidence_embeddings_cached": evidence_cached,
             "candidate_count_distribution": {
                 str(count): candidate_counts[count] for count in sorted(candidate_counts)

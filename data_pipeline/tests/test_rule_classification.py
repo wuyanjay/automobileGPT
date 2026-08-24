@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import importlib.util
 import sys
 import unittest
 from pathlib import Path
@@ -22,6 +23,66 @@ from _common import (  # noqa: E402
     requires_safety_review,
     risk_flags,
 )
+
+NORMALIZE_SPEC = importlib.util.spec_from_file_location(
+    "normalize_filter", SCRIPT_DIR / "02_normalize_filter.py"
+)
+NORMALIZE = importlib.util.module_from_spec(NORMALIZE_SPEC)
+NORMALIZE_SPEC.loader.exec_module(NORMALIZE)
+
+
+class VehicleContextTests(unittest.TestCase):
+    def setUp(self):
+        self.catalog = NORMALIZE.build_vehicle_catalog([
+            {"instruction": "以下为汽车品牌和车型信息:本田 雅阁,请回答相关问题:"},
+            {"instruction": "以下为汽车品牌和车型信息:本田 里程,请回答相关问题:"},
+            {"instruction": "以下为汽车品牌和车型信息:大众 桑塔纳,请回答相关问题:"},
+            {"instruction": "以下为汽车品牌和车型信息:别克 昂科威,请回答相关问题:"},
+        ])
+
+    def test_explicit_owned_vehicle_conflict_is_blocking(self):
+        status, declared, mentions = NORMALIZE.vehicle_context_check(
+            "以下为汽车品牌和车型信息:本田 雅阁,请回答相关问题:",
+            "我有一款08年的桑塔纳，没有风且风量无法调节。",
+            self.catalog,
+        )
+        self.assertEqual(status, "conflict")
+        self.assertEqual(declared["model"], "雅阁")
+        self.assertEqual(mentions[0]["model"], "桑塔纳")
+
+    def test_same_explicit_model_is_consistent(self):
+        status, _, _ = NORMALIZE.vehicle_context_check(
+            "以下为汽车品牌和车型信息:别克 昂科威,请回答相关问题:",
+            "昂科威低速行驶时转速突然升高。",
+            self.catalog,
+        )
+        self.assertEqual(status, "consistent")
+
+    def test_comparison_with_another_model_is_review_only(self):
+        status, _, _ = NORMALIZE.vehicle_context_check(
+            "以下为汽车品牌和车型信息:本田 雅阁,请回答相关问题:",
+            "桑塔纳与这款车相比，空调结构一样吗？",
+            self.catalog,
+        )
+        self.assertEqual(status, "review")
+
+    def test_implicit_vehicle_reference_is_not_blocked(self):
+        status, _, mentions = NORMALIZE.vehicle_context_check(
+            "以下为汽车品牌和车型信息:别克 昂科威,请回答相关问题:",
+            "我的车低速行驶时转速突然升高。",
+            self.catalog,
+        )
+        self.assertEqual(status, "no_explicit_vehicle")
+        self.assertEqual(mentions, [])
+
+    def test_two_character_model_word_in_repair_prose_is_not_a_vehicle(self):
+        status, _, mentions = NORMALIZE.vehicle_context_check(
+            "以下为汽车品牌和车型信息:别克 昂科威,请回答相关问题:",
+            "我的车续航里程显示不准，跑一段路也没有变化。",
+            self.catalog,
+        )
+        self.assertEqual(status, "no_explicit_vehicle")
+        self.assertEqual(mentions, [])
 
 
 class RepairIntentTests(unittest.TestCase):

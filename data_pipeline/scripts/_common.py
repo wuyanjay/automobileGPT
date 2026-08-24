@@ -15,6 +15,7 @@ import tempfile
 import time
 import unicodedata
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from collections import Counter
@@ -24,6 +25,44 @@ from xml.etree import ElementTree
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PIPELINE_ROOT = SCRIPT_DIR.parent
+
+
+def load_env_file(env_path=None, override=False):
+    """Load simple KEY=VALUE settings from data_pipeline/.env.
+
+    Existing process environment variables win by default, so Colab secrets or
+    explicitly configured shell variables can still override the local file.
+    The parser intentionally uses only the Python standard library.
+    """
+    path = Path(env_path) if env_path else PIPELINE_ROOT / ".env"
+    if not path.is_absolute():
+        candidate = Path.cwd() / path
+        path = candidate if candidate.exists() else PIPELINE_ROOT / path
+    if not path.exists():
+        return None
+
+    for line_number, raw_line in enumerate(
+        path.read_text(encoding="utf-8-sig").splitlines(), start=1
+    ):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        if "=" not in line:
+            raise ValueError("Invalid .env line {} in {}".format(line_number, path))
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if not re.match(r"^[A-Za-z_][A-Za-z0-9_]*$", key):
+            raise ValueError("Invalid .env key on line {} in {}".format(line_number, path))
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+            value = value[1:-1]
+        elif " #" in value:
+            value = value.split(" #", 1)[0].rstrip()
+        if override or key not in os.environ:
+            os.environ[key] = value
+    return path.resolve()
 
 
 def load_config(config_path=None):
@@ -660,20 +699,41 @@ def is_fault_case(title, text):
 DTC_RE = re.compile(r"(?i)\b[PCBU][0O0-9A-F][0-9A-F]{3,5}\b")
 NUMBER_UNIT_RE = re.compile(
     r"(?i)(?<![A-Za-z0-9])\d+(?:\.\d+)?\s*(?:mV|V|mA|A|Ω|ohms?|bar|kPa|MPa|psi|rpm|r/min|"
-    r"km/h|km|公里|mm|cm|m|L|mL|升|毫升|Nm|N·m|%|℃|°C|度)(?![A-Za-z])"
+    r"km/h|km|公里|mm|cm|m|L|mL|升|毫升|Nm|N·m|%|℃|°C|度|年|个月|月|周|天|"
+    r"小时|分钟|秒|万元|元)(?![A-Za-z])"
 )
 YEAR_RE = re.compile(r"(?<!\d)(?:19|20)\d{2}(?:年|款)?(?!\d)")
+SHORT_YEAR_RE = re.compile(r"(?<!\d)\d{2}(?:年|款)(?!\d)")
 CODE_RE = re.compile(r"(?i)\b(?:[A-Z]{1,5}[-/]?\d{2,}[A-Z0-9/-]*|\d+[A-Z]{1,5}\d+[A-Z0-9/-]*)\b")
+TEN_THOUSAND_DISTANCE_RE = re.compile(r"(?i)(?<![\d.])\d+(?:\.\d+)?\s*万\s*(?:km|公里)")
+OIL_GRADE_RE = re.compile(r"(?i)(?<![A-Z0-9])\d{1,2}W[- ]?\d{2}(?![A-Z0-9])")
+FUEL_GRADE_RE = re.compile(r"(?<!\d)(?:89|9\d|10[0-2])号(?:汽油)?")
 
 
 def normalize_literal(value):
-    return re.sub(r"\s+", "", str(value)).upper()
+    normalized = re.sub(r"\s+", "", str(value)).upper()
+    year_match = re.fullmatch(r"(\d{2}|\d{4})(?:年|款)", normalized)
+    if year_match:
+        digits = year_match.group(1)
+        if len(digits) == 2:
+            short_year = int(digits)
+            if short_year <= 29:
+                digits = str(2000 + short_year)
+            elif short_year >= 80:
+                digits = str(1900 + short_year)
+            else:
+                return normalized
+        return "MODEL_YEAR:{}".format(digits)
+    return normalized
 
 
 def extract_literals(text):
     text = str(text or "")
     values = []
-    for regex in (DTC_RE, NUMBER_UNIT_RE, YEAR_RE, CODE_RE):
+    for regex in (
+        DTC_RE, NUMBER_UNIT_RE, YEAR_RE, SHORT_YEAR_RE, CODE_RE,
+        TEN_THOUSAND_DISTANCE_RE, OIL_GRADE_RE, FUEL_GRADE_RE,
+    ):
         values.extend(match.group(0) for match in regex.finditer(text))
     deduped = []
     seen = set()
@@ -756,18 +816,32 @@ def parse_model_json(text):
         raise ValueError("Model output does not contain a JSON object")
 
 
+def chat_completions_endpoint(base_url):
+    """Resolve an OpenAI-compatible base URL to its Chat Completions endpoint."""
+    endpoint = str(base_url or "").strip().rstrip("/")
+    if not endpoint:
+        raise RuntimeError("Missing LLM base URL.")
+    if endpoint.endswith("/chat/completions"):
+        return endpoint
+    if endpoint.endswith("/v1"):
+        return endpoint + "/chat/completions"
+
+    parsed = urllib.parse.urlsplit(endpoint)
+    # DeepSeek's official OpenAI-format base URL currently omits /v1.
+    if parsed.netloc.lower() == "api.deepseek.com" and not parsed.path.rstrip("/"):
+        return endpoint + "/chat/completions"
+    return endpoint + "/v1/chat/completions"
+
+
 def api_chat(messages, model, base_url, api_key, temperature=0.1, timeout=120):
     if not api_key:
-        raise RuntimeError("Missing API key. Set LLM_API_KEY or OPENAI_API_KEY.")
-    endpoint = base_url.rstrip("/")
-    if not endpoint.endswith("/chat/completions"):
-        if not endpoint.endswith("/v1"):
-            endpoint += "/v1"
-        endpoint += "/chat/completions"
+        raise RuntimeError("Missing API key. Fill LLM_API_KEY in data_pipeline/.env.")
+    endpoint = chat_completions_endpoint(base_url)
     payload = {
         "model": model,
         "messages": messages,
         "temperature": temperature,
+        "response_format": {"type": "json_object"},
     }
     request = urllib.request.Request(
         endpoint,

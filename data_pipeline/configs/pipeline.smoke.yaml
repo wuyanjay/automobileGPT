@@ -2,8 +2,8 @@
   "seed": 42,
   "paths": {
     "raw": "data/raw",
-    "work": "data/work/smoke_verify",
-    "final": "data/final/smoke_verify"
+    "work": ".tmp/smoke_verify",
+    "final": ".tmp/final_smoke_verify"
   },
   "sources": {
     "amck": "data/raw/amck/amck.json",
@@ -27,14 +27,28 @@
     "include_unsafe_evidence": false,
     "include_context_dependent_d2": false
   },
+  "semantic_recall": {
+    "enabled": false,
+    "model": "Qwen/Qwen3-4B-Instruct-2507",
+    "prompt_version": "v1",
+    "load_in_4bit": true,
+    "batch_size": 1,
+    "max_input_tokens": 2048,
+    "max_new_tokens": 256,
+    "save_every": 5,
+    "review_limit": 20
+  },
   "embedding": {
     "model": "BAAI/bge-m3",
     "batch_size": 16,
     "candidate_pool_k": 50,
-    "final_top_k": 3,
+    "final_top_k": 5,
     "min_score": null,
-    "system_match_bonus": 0.02,
-    "system_mismatch_penalty": 0.03,
+    "symptom_weight": 0.75,
+    "system_match_bonus": 0.01,
+    "system_mismatch_penalty": 0.0,
+    "powertrain_mismatch_penalty": 0.01,
+    "diversity_score_margin": 0.08,
     "dtc_boost": 0.05,
     "dedup_similarity": 0.98,
     "pilot_query_limit": 10

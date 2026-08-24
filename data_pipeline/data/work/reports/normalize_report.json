@@ -1,20 +1,21 @@
 {
   "d1": {
     "raw": 43962,
-    "kept": 42016,
-    "rejected": 1946
+    "kept": 41947,
+    "rejected": 2015
   },
   "datasets": {
     "d1_amck": {
-      "records": 42016,
+      "records": 41947,
       "flags": {
         "mixed_repair_price": 1737,
-        "mixed_repair_purchase": 6
+        "mixed_repair_purchase": 6,
+        "vehicle_context_mismatch_review": 46
       },
       "split_counts": {
-        "train": 37830,
-        "validation": 2106,
-        "test": 2080
+        "train": 37767,
+        "validation": 2102,
+        "test": 2078
       }
     },
     "d2_mechanics": {
@@ -81,7 +82,7 @@
     }
   },
   "rejected_counts": {
-    "d1_amck": 1946,
+    "d1_amck": 2015,
     "d2_mechanics": 143,
     "d3_faults": 1003,
     "professional_sft": 321,
@@ -95,6 +96,13 @@
       "mixed_repair_purchase": 6,
       "purchase_only": 48,
       "price_only": 1538
+    },
+    "d1_vehicle_context": {
+      "no_explicit_vehicle": 28491,
+      "consistent": 14727,
+      "unknown": 624,
+      "review": 50,
+      "conflict": 70
     },
     "d2_domain": {
       "non_automotive": 10,

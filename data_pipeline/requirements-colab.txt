@@ -1,5 +1,8 @@
-# Colab embedding/token-length dependencies
+# Colab semantic-recall, embedding, and token-length dependencies
 numpy>=1.23
+tqdm>=4.26
 torch>=2.1
-transformers>=4.41
+transformers>=4.51
+accelerate>=0.30
+bitsandbytes>=0.43
 sentence-transformers>=2.7

@@ -1,7 +1,0 @@
-{
-  "fingerprint": "677c237cbe2f3a2ed1d1c1dc0209136572d9e8fa64e448a311a68f6ea1cb7842",
-  "backend": "hash",
-  "model": "BAAI/bge-m3",
-  "records": 10,
-  "dimensions": 512
-}
