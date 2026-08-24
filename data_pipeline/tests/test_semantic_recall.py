@@ -13,6 +13,8 @@ SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from _semantic_recall import (  # noqa: E402
+    D1_PROMPT,
+    EVIDENCE_PROMPT,
     decision_is_accepted,
     is_semantic_candidate,
     merge_effective_d1,
@@ -69,6 +71,28 @@ class CandidateTests(unittest.TestCase):
         self.assertTrue(is_semantic_candidate("d4", d4))
         d4["flags"].append("needs_image")
         self.assertFalse(is_semantic_candidate("d4", d4))
+
+
+class PromptContractTests(unittest.TestCase):
+    def test_d1_prompt_covers_missed_mixed_intents(self):
+        self.assertIn("外倾角怎么调", D1_PROMPT)
+        self.assertIn("二保该换什么", D1_PROMPT)
+        self.assertIn("灯罩破了能只换灯罩吗", D1_PROMPT)
+
+    def test_evidence_prompt_does_not_trust_article_style(self):
+        self.assertIn("标题、文体和来源不能决定分类", EVIDENCE_PROMPT)
+        self.assertIn("技术研究文章", EVIDENCE_PROMPT)
+
+    def test_evidence_prompt_separates_hypothesis_and_observation(self):
+        self.assertIn("假设性原理或应急操作", EVIDENCE_PROMPT)
+        self.assertIn("不能只是原始故障现象", EVIDENCE_PROMPT)
+
+    def test_evidence_prompt_blocks_dangerous_road_reproduction(self):
+        self.assertIn("上路加速至140km/h", EVIDENCE_PROMPT)
+        self.assertIn("unsafe_operation=true", EVIDENCE_PROMPT)
+
+    def test_uncertain_evidence_must_be_reviewed(self):
+        self.assertIn("不要用keep_rejected加low", EVIDENCE_PROMPT)
 
 
 class ValidationTests(unittest.TestCase):

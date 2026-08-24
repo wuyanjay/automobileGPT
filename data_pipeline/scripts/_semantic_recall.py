@@ -35,10 +35,25 @@ D1_PROMPT = """任务：复核一条被判为price_only的汽车问答问题。
 
 标签定义：
 - price_only：核心诉求只是价格、报价、工时费或更换费用。仅仅提到部件损坏、事故外观、已经更换某件，或问“换X多少钱”，仍是price_only。
-- mixed_repair_price：除价格外，用户还明确要求诊断原因、判断已有维修结论是否正确、提供检查/排查/处理方案，或评估故障是否影响安全。这个维修诉求必须能够脱离价格问题独立成立。
+- mixed_repair_price：除价格外，用户还明确要求诊断原因、判断已有维修结论是否正确、提供检查/排查/处理方案、判断维修范围/必要性，或评估故障是否影响安全。这个维修诉求必须能够脱离价格问题独立成立。
+
+特别注意以下表达属于独立维修诉求，应判为mixed_repair_price：
+- “怎么调/怎么修/怎么处理 + 多少钱”；
+- “保养该换什么/需要做哪些项目 + 工时费”；
+- “能否只换局部/是否必须整体更换 + 多少钱”；
+- “有没有必要做某项维修/已有维修判断是否合理 + 价格”。
+
+以下情况仍是price_only：只问“换X多少钱”、只问哪里购买/安装、只问4S店和外面的价格差异，或只描述损坏后询价而没有询问原因、方法、范围、必要性或安全影响。
+
+判定示例：
+- “换压缩机多少钱” -> price_only。
+- “外倾角怎么调，大概多少钱” -> mixed_repair_price。
+- “二保该换什么，工时一般多少钱” -> mixed_repair_price。
+- “灯罩破了能只换灯罩吗，多少钱” -> mixed_repair_price。
 
 只有明确属于mixed_repair_price时decision才可为recall；其余为keep_rejected；有歧义为review。
 supporting_quotes必须摘录能够证明“独立维修诉求”的原文，不能只摘录价格或损坏部件名称。
+引用必须逐字复制，包括原文中的重复字、错别字和标点，不得顺手纠正。
 
 输出字段：
 {"decision":"recall|keep_rejected|review","label":"mixed_repair_price|price_only","confidence":"high|medium|low","supporting_quotes":[],"action_quotes":[],"finding_quotes":[],"verification_quotes":[],"unsafe_operation":false,"reason":"不超过60字"}
@@ -48,16 +63,27 @@ supporting_quotes必须摘录能够证明“独立维修诉求”的原文，不
 EVIDENCE_PROMPT = """任务：判断一段汽车技术文本是否被规则误判，能否召回为维修Evidence。
 
 标签定义：
-- diagnostic_case：描述实际故障，并包含检查/测试动作，以及检查发现、范围收窄、原因判断或维修后验证。仅有现象和最终原因不够。
-- diagnostic_procedure：提供可执行的分步或条件式诊断流程，写明检查对象以及正常/异常时的判断或下一分支。纯拆装、保养、原理或原因清单不算。
+- diagnostic_case：描述已经实际发生的故障，明确写出已执行的检查/测试动作，以及该动作得到的发现、范围收窄、原因判断或维修后验证。仅有现象和最终原因不够。
+- diagnostic_procedure：提供可执行的分步或条件式诊断流程，写明检查对象，并写出正常/异常时的判断标准或下一分支。流程可以是通用流程，不要求已经在某辆车上执行，但不能只有原因清单或“建议检查”。
 - technical_only：技术原理、参数介绍、保养知识、原因罗列或只有维修结论，没有足够诊断链。
 - incomplete：文本截断、关键步骤缺失或依赖未提供的图片/外链。
 - other：非汽车维修内容。
 
 decision规则：
 - 只有明确的diagnostic_case或diagnostic_procedure才能为recall。
-- 涉及绕过安全联锁、气囊/安全带/限速器，危险道路复现，高压或燃油系统非专业改线、短接、并接、拆装时，unsafe_operation=true且不得recall。
+- 标题、文体和来源不能决定分类。即使标题像“研究、分析、原理、技术文章”，只要正文包含真实故障、测试结果、原因收窄、修复以及验证，仍应判为diagnostic_case。
+- “如果……可以……”“遇到这种情况可……”等假设性原理或应急操作，不等于已经执行的检查，不能仅凭这些内容判为diagnostic_case。
+- finding_quotes必须是action_quotes中某项动作实际得到的结果，不能只是原始故障现象、未经检查的原因断言或操作目的。
+- 只有处理措施和“修复后正常”，却没有此前的检查动作及检查发现，仍为technical_only。
+- 涉及绕过安全联锁、气囊/安全带/限速器，高压或燃油系统非专业改线、短接、并接、拆装时，unsafe_operation=true且不得recall。
+- 危险道路复现必须unsafe_operation=true且不得recall，例如拆除滤芯或其他关键部件后上路、在公共道路高速/满油门测试、主动制造失控条件、要求长距离恶劣工况运行。普通安全场地内的低速短时观察不自动视为危险。
 - 不能因为出现“诊断、检查、故障原因、解决措施”等标题就直接召回。
+
+判定示例：
+- “更换同款部件后现象不变；台架测试发现特定转速共振；修改参数后再次台架测试和整车试车，异响消失” -> diagnostic_case，即使它来自技术研究文章。
+- “先检查空气滤清器是否堵塞；若堵塞并伴随黑烟和动力下降则更换，否则继续检查供油系统” -> diagnostic_procedure。
+- “如果热车难启动，可以踩下加速踏板帮助启动” -> technical_only；这是原理/应急建议，不是实际诊断案例。
+- “拆除空气滤芯后上路加速至140km/h验证” -> unsafe_operation=true且keep_rejected。
 
 引用要求：
 - action_quotes：实际检查、检测、测量、试车或诊断动作。
@@ -65,6 +91,12 @@ decision规则：
 - verification_quotes：维修后的恢复、试车、复现或回访结果；没有可以为空。
 - diagnostic_case至少需要action_quotes，以及finding_quotes或verification_quotes。
 - diagnostic_procedure至少需要action_quotes和finding_quotes。
+- 引用必须逐字复制，包括原文中的重复字、错别字和标点，不得改写。
+
+置信度与decision必须一致：
+- 证据足以明确召回或明确拒绝时使用high。
+- 在diagnostic_case、diagnostic_procedure、technical_only或incomplete之间拿不准时，decision必须为review，confidence使用medium或low。
+- 不要用keep_rejected加low来回避不确定判断。
 
 输出字段：
 {"decision":"recall|keep_rejected|review","label":"diagnostic_case|diagnostic_procedure|technical_only|incomplete|other","confidence":"high|medium|low","supporting_quotes":[],"action_quotes":[],"finding_quotes":[],"verification_quotes":[],"unsafe_operation":false,"reason":"不超过60字"}
@@ -361,7 +393,7 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
     normalized_dir = work_dir / "normalized"
     rejected_dir = work_dir / "rejected" / "normalize"
     model_name = settings.get("model", "Qwen/Qwen3-4B-Instruct-2507")
-    prompt_version = settings.get("prompt_version", "v1")
+    prompt_version = settings.get("prompt_version", "v2")
     batch_size = max(1, int(settings.get("batch_size", 4)))
     save_every = max(batch_size, int(settings.get("save_every", 20)))
     seed = int(config.get("seed", 42))
