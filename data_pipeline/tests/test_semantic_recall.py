@@ -19,6 +19,7 @@ from _semantic_recall import (  # noqa: E402
     is_semantic_candidate,
     merge_effective_d1,
     parse_decision,
+    prompt_version_for_dataset,
     quote_supported,
     recalled_record,
     run_semantic_recall,
@@ -99,6 +100,10 @@ class PromptContractTests(unittest.TestCase):
     def test_evidence_prompt_separates_hypothesis_and_observation(self):
         self.assertIn("假设性原理或应急操作", EVIDENCE_PROMPT)
         self.assertIn("不能只是原始故障现象", EVIDENCE_PROMPT)
+
+    def test_evidence_prompt_accepts_observed_component_correlation(self):
+        self.assertIn("实际改变车辆或部件状态", EVIDENCE_PROMPT)
+        self.assertIn("散热器风扇运转时雨刷同步转动", EVIDENCE_PROMPT)
 
     def test_evidence_prompt_blocks_dangerous_road_reproduction(self):
         self.assertIn("上路加速至140km/h", EVIDENCE_PROMPT)
@@ -194,6 +199,15 @@ class ValidationTests(unittest.TestCase):
 
 
 class MergeTests(unittest.TestCase):
+    def test_prompt_versions_can_change_one_dataset_only(self):
+        settings = {
+            "prompt_version": "v3",
+            "prompt_versions": {"d3": "v4"},
+        }
+        self.assertEqual(prompt_version_for_dataset(settings, "d1"), "v3")
+        self.assertEqual(prompt_version_for_dataset(settings, "d3"), "v4")
+        self.assertEqual(prompt_version_for_dataset(settings, "d4"), "v3")
+
     def test_recalled_record_removes_rule_reject_flag(self):
         source = {
             "evidence_source_id": "d3_3",

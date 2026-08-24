@@ -31,6 +31,11 @@
     "enabled": false,
     "model": "Qwen/Qwen3-4B-Instruct-2507",
     "prompt_version": "v3",
+    "prompt_versions": {
+      "d1": "v3",
+      "d3": "v4",
+      "d4": "v3"
+    },
     "load_in_4bit": true,
     "batch_size": 1,
     "max_input_tokens": 2048,

@@ -85,6 +85,7 @@ decision规则：
 - 标题、文体和来源不能决定分类。即使标题像“研究、分析、原理、技术文章”，只要正文包含真实故障、测试结果、原因收窄、修复以及验证，仍应判为diagnostic_case。
 - “如果……可以……”“遇到这种情况可……”等假设性原理或应急操作，不等于已经执行的检查，不能仅凭这些内容判为diagnostic_case。
 - finding_quotes必须是action_quotes中某项动作实际得到的结果，不能只是原始故障现象、未经检查的原因断言或操作目的。
+- 对已经发生的故障，维修人员实际改变车辆或部件状态并观察故障是否随之出现、消失或变化，属于检查动作及检查发现；即使尚未完成最终修复，只要联动关系明确，也可以判为diagnostic_case。
 - 只有处理措施和“修复后正常”，却没有此前的检查动作及检查发现，仍为technical_only。
 - 涉及绕过安全联锁、气囊/安全带/限速器，高压或燃油系统非专业改线、短接、并接、拆装时，unsafe_operation=true且不得recall。
 - 危险道路复现必须unsafe_operation=true且不得recall，例如拆除滤芯或其他关键部件后上路、在公共道路高速/满油门测试、主动制造失控条件、要求长距离恶劣工况运行。普通安全场地内的低速短时观察不自动视为危险。
@@ -93,6 +94,7 @@ decision规则：
 判定示例：
 - “更换同款部件后现象不变；台架测试发现特定转速共振；修改参数后再次台架测试和整车试车，异响消失” -> diagnostic_case，即使它来自技术研究文章。
 - “先检查空气滤清器是否堵塞；若堵塞并伴随黑烟和动力下降则更换，否则继续检查供油系统” -> diagnostic_procedure。
+- “维修人员分别打开和关闭空调，观察到散热器风扇运转时雨刷同步转动、风扇停转时雨刷也停止” -> diagnostic_case；这是实际改变状态并观察联动结果，不只是重复描述用户反映的现象。
 - “如果热车难启动，可以踩下加速踏板帮助启动” -> technical_only；这是原理/应急建议，不是实际诊断案例。
 - “拆除空气滤芯后上路加速至140km/h验证” -> unsafe_operation=true且keep_rejected。
 
@@ -403,6 +405,14 @@ def load_decision_cache(path):
     }
 
 
+def prompt_version_for_dataset(settings, dataset):
+    """Return a dataset-specific prompt version without invalidating unrelated caches."""
+    prompt_versions = settings.get("prompt_versions", {})
+    return str(prompt_versions.get(
+        dataset, settings.get("prompt_version", "v3")
+    ))
+
+
 def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=True, classifier=None):
     """Recall only rejected D1/D3/D4 records and write traceable semantic artifacts."""
     settings = config.get("semantic_recall", {})
@@ -421,6 +431,10 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
         "enabled": enabled,
         "model": model_name,
         "prompt_version": prompt_version,
+        "prompt_versions": {
+            dataset: prompt_version_for_dataset(settings, dataset)
+            for dataset in ("d1", "d3", "d4")
+        },
         "per_dataset_limit": int(per_dataset_limit or 0),
         "datasets": {},
     }
@@ -431,6 +445,7 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
         ("d3", "d3_faults.jsonl"),
         ("d4", "d4_documents.jsonl"),
     ):
+        dataset_prompt_version = prompt_version_for_dataset(settings, dataset)
         rejected_records = list(read_jsonl(rejected_dir / filename))
         candidates = [record for record in rejected_records if is_semantic_candidate(dataset, record)]
         candidates.sort(key=lambda record: stable_hash(
@@ -449,7 +464,7 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
         for record in selected:
             record_id = semantic_record_id(dataset, record)
             fingerprint = decision_fingerprint(
-                dataset, record, model_name, prompt_version
+                dataset, record, model_name, dataset_prompt_version
             )
             cached = cache.get(record_id)
             if cached and cached.get("fingerprint") == fingerprint:
@@ -484,7 +499,8 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
                     raise RuntimeError("Semantic classifier returned an unexpected batch size")
                 for (record, fingerprint), raw_output in zip(batch, outputs):
                     decision = parse_decision(
-                        dataset, record, raw_output, model_name, prompt_version, fingerprint
+                        dataset, record, raw_output, model_name,
+                        dataset_prompt_version, fingerprint
                     )
                     record_id = semantic_record_id(dataset, record)
                     current[record_id] = decision
@@ -505,6 +521,7 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
         accepted = sum(decision_is_accepted(record) for record in decisions)
         invalid = sum(bool(record.get("validation_errors")) for record in decisions)
         report["datasets"][dataset] = {
+            "prompt_version": dataset_prompt_version,
             "rejected_records": len(rejected_records),
             "recall_candidates": len(candidates),
             "selected": len(selected),
