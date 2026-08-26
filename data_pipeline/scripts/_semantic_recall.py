@@ -242,6 +242,7 @@ def decision_is_accepted(decision_record):
         decision_record.get("decision") == "recall"
         and decision_record.get("confidence") == "high"
         and not decision_record.get("validation_errors")
+        and not decision_record.get("manual_excluded", False)
     )
 
 
@@ -413,6 +414,19 @@ def prompt_version_for_dataset(settings, dataset):
     ))
 
 
+def manual_exclusions_for_dataset(settings, dataset):
+    """Return auditable record_id -> reason exclusions for one dataset."""
+    configured = settings.get("manual_exclusions", {}).get(dataset, {})
+    if isinstance(configured, list):
+        return {str(record_id): "manual_review_false_positive" for record_id in configured}
+    if isinstance(configured, dict):
+        return {
+            str(record_id): normalize_inline(reason) or "manual_review_false_positive"
+            for record_id, reason in configured.items()
+        }
+    return {}
+
+
 def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=True, classifier=None):
     """Recall only rejected D1/D3/D4 records and write traceable semantic artifacts."""
     settings = config.get("semantic_recall", {})
@@ -517,6 +531,20 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
             for record in selected
             if semantic_record_id(dataset, record) in current
         ]
+        manual_exclusions = manual_exclusions_for_dataset(settings, dataset)
+        for decision in decisions:
+            exclusion_reason = manual_exclusions.get(decision["record_id"])
+            if exclusion_reason:
+                decision["manual_excluded"] = True
+                decision["manual_exclusion_reason"] = exclusion_reason
+            else:
+                decision.pop("manual_excluded", None)
+                decision.pop("manual_exclusion_reason", None)
+            decision["accepted"] = decision_is_accepted(decision)
+        if enabled and decisions:
+            # Persist the audit marker alongside the cached model decision. The
+            # original decision/label/quotes remain unchanged and traceable.
+            write_jsonl(cache_path, sorted(cache.values(), key=lambda item: item["record_id"]))
         decisions_by_dataset[dataset] = decisions
         accepted = sum(decision_is_accepted(record) for record in decisions)
         invalid = sum(bool(record.get("validation_errors")) for record in decisions)
@@ -531,6 +559,9 @@ def run_semantic_recall(config, work_dir, per_dataset_limit=0, show_progress=Tru
             "accepted": accepted,
             "review": sum(record.get("decision") == "review" for record in decisions),
             "invalid": invalid,
+            "manual_excluded": sum(
+                bool(record.get("manual_excluded")) for record in decisions
+            ),
             "labels": dict(Counter(record.get("label") for record in decisions)),
         }
         for decision in decisions:

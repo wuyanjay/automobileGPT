@@ -17,6 +17,7 @@ from _semantic_recall import (  # noqa: E402
     EVIDENCE_PROMPT,
     decision_is_accepted,
     is_semantic_candidate,
+    manual_exclusions_for_dataset,
     merge_effective_d1,
     parse_decision,
     prompt_version_for_dataset,
@@ -199,6 +200,31 @@ class ValidationTests(unittest.TestCase):
 
 
 class MergeTests(unittest.TestCase):
+    def test_manual_exclusion_blocks_recall_without_overwriting_model_decision(self):
+        decision = {
+            "record_id": "d3_bad",
+            "decision": "recall",
+            "label": "diagnostic_case",
+            "confidence": "high",
+            "validation_errors": [],
+            "manual_excluded": True,
+            "manual_exclusion_reason": "人工复核为误召回",
+        }
+        self.assertFalse(decision_is_accepted(decision))
+        self.assertEqual(decision["decision"], "recall")
+
+    def test_manual_exclusions_support_auditable_reasons(self):
+        settings = {
+            "manual_exclusions": {
+                "d3": {"d3_bad": "没有实际检查发现"},
+            },
+        }
+        self.assertEqual(
+            manual_exclusions_for_dataset(settings, "d3"),
+            {"d3_bad": "没有实际检查发现"},
+        )
+        self.assertEqual(manual_exclusions_for_dataset(settings, "d1"), {})
+
     def test_prompt_versions_can_change_one_dataset_only(self):
         settings = {
             "prompt_version": "v3",
